@@ -2,18 +2,21 @@ package com.me.model.dao;
 
 
 import com.me.model.dto.Customer;
+import com.me.model.dto.Name;
 
 import java.util.Iterator;
 
 public interface ICustomerDAO {
 
-    Iterator<Customer> findAllCustomers();
-
-    Customer findCustomer(String name);
-
-    void insertCustomer(Customer c);
+    void addCustomer(Customer c);
 
     void modifyCustomer(Customer c);
 
-    void deleteCustomer(Customer c);
+    void removeCustomer(Customer c);
+
+    // names of the customers are unique
+    Customer findCustomerByName(Name name);
+
+    Iterator<Customer> findAllCustomers();
+
 }
