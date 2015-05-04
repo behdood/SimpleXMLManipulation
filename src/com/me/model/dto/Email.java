@@ -1,14 +1,12 @@
 package com.me.model.dto;
 
-
-public class Phone extends ContactDetail {
+public class Email extends ContactDetail{
     private String type;
     private String value;
 
-    public Phone(String type, String value) {
-        this.contactType = CONTACT_TYPE.PHONE;
+    public Email(String type, String value) {
+        this.contactType = CONTACT_TYPE.EMAIL;
         this.type = type;
         this.value = value;
     }
-
 }

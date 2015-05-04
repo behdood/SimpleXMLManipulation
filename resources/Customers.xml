@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Customers xmlns="http://www.arcusys.fi/customer-example">
+  <Customer xmlns="http://www.arcusys.fi/customer-example">
+    <Name>Conan C. Customer</Name>
+    <Address>
+      <Type>VISITING_ADDRESS</Type>
+      <Street>Customer Street 8 B 9</Street>
+      <Street>(P.O. Box 190)</Street>
+      <PostalCode>12346</PostalCode>
+      <Town>Customerville</Town>
+    </Address>
+    <Phone>
+      <Type>WORK_PHONE</Type>
+      <Value>+358 555 555 555</Value>
+    </Phone>
+    <Email>
+      <Type>WORK_EMAIL</Type>
+      <Value>conan.c.customer@example.com</Value>
+    </Email>
+    <Phone>
+      <Type>MOBILE_PHONE</Type>
+      <Value>+358 50 999 999 999</Value>
+    </Phone>
+    <Notes>                                            Conan is a customer.
+    </Notes>
+  </Customer>
+  <Customer>
+    <Name>asdfdsf</Name>
+    <Address>
+      <Type>HOME</Type>
+      <Street>asd</Street>
+      <Street>asd</Street>
+      <PostalCode>98798</PostalCode>
+      <Town>sd</Town>
+    </Address>
+    <Phone>
+      <Type>asdsad</Type>
+      <Value>asdas</Value>
+    </Phone>
+    <Email>
+      <Type>WORK_EMAIL</Type>
+      <Value>comer@aa.com</Value>
+    </Email>
+    <Notes>111</Notes>
+  </Customer>
+  <Customer>
+    <Name>lkjlkjlk</Name>
+    <Address>
+      <Type>2131</Type>
+      <Street>lkö</Street>
+      <Street>ölköl</Street>
+      <PostalCode>09</PostalCode>
+      <Town>asd</Town>
+    </Address>
+    <Phone>
+      <Type>HOme</Type>
+      <Value>213</Value>
+    </Phone>
+    <Phone>
+      <Type>Work</Type>
+      <Value>123</Value>
+    </Phone>
+    <Phone>
+      <Type>AA</Type>
+      <Value>123</Value>
+    </Phone>
+    <Email>
+      <Type>;lksad</Type>
+      <Value>123</Value>
+    </Email>
+    <Notes>			    sadsalkdj
+lkajsdlk
+lkjdasd
+lkajsd
+lkasjd
+alskdjlkjlkjlk								asdjlkjlkjlkjlkjlksajdlksajdlk	alskdjlksajdlksajdlksajd
+lksadjlksajdlksajdlksajd
+		jdlksajdlsa
+lksadjlksadjlksajdlsakjdlksadjsalkd
+</Notes>
+  </Customer>
+  <Customer>
+    <Name>abcdf</Name>
+    <Address>
+      <Type>home</Type>
+      <Street>asdsa</Street>
+      <Street>lkjlkj</Street>
+      <PostalCode>123</PostalCode>
+      <Town>hels</Town>
+    </Address>
+    <Phone>
+      <Type>hooom</Type>
+      <Value>123798798</Value>
+    </Phone>
+    <Email>
+      <Type>ejhkr</Type>
+      <Value>3498327</Value>
+    </Email>
+    <Notes>lkjlkj</Notes>
+  </Customer>
+</Customers>

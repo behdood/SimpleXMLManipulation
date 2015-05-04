@@ -1,0 +1,24 @@
+<Customer xmlns="http://www.arcusys.fi/customer-example">
+  <Name>Conan C. Customer</Name>
+  <Address>
+    <Type>VISITING_ADDRESS</Type>
+    <Street>Customer Street 8 B 9</Street>
+    <Street>(P.O. Box 190)</Street>
+    <PostalCode>12346</PostalCode>
+    <Town>Customerville</Town>
+  </Address>
+  <Phone>
+    <Type>WORK_PHONE</Type>
+    <Value>+358 555 555 555</Value>
+  </Phone>
+  <Email>
+    <Type>WORK_EMAIL</Type>
+    <Value>conan.c.customer@example.com</Value>
+  </Email>
+  <Phone>
+    <Type>MOBILE_PHONE</Type>
+    <Value>+358 50 999 999 999</Value>
+  </Phone>
+  <Notes>                                            Conan is a customer.
+  </Notes>
+</Customer>
