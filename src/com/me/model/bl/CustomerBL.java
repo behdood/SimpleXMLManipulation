@@ -8,7 +8,7 @@ import java.util.Iterator;
 
 public class CustomerBL implements CustomerIX {
 
-    ICustomerDAO customerDAO;
+    private ICustomerDAO customerDAO;
 
     public CustomerBL(ICustomerDAO customerDAO) {
         this.customerDAO = customerDAO;
@@ -20,7 +20,7 @@ public class CustomerBL implements CustomerIX {
     }
 
     @Override
-    public boolean updateCustomer(Customer customer) {
+    public boolean updateCustomer(Name oldCustomerName, Customer updatedCustomer) {
         return false;
     }
 

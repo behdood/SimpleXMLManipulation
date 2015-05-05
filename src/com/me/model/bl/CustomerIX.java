@@ -10,7 +10,7 @@ public interface CustomerIX {
 
     boolean insertCustomer(Customer customer);
 
-    boolean updateCustomer(Customer customer);
+    boolean updateCustomer(Name oldCustomerName, Customer updatedCustomer);
 
     boolean deleteCustomer(Customer customer);
 

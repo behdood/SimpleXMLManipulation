@@ -6,7 +6,9 @@ import com.me.model.bl.CustomerIX;
 public class CustomerDAOFactory {
 
     public CustomerIX getCustomerDao(String type) {
-        return  null;
+//        if (type.equals("xml"))
+//            return new XmlCustomerDAO;
+        return null;
     }
 
 
