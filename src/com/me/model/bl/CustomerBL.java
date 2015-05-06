@@ -8,34 +8,62 @@ import java.util.Iterator;
 
 public class CustomerBL implements CustomerIX {
 
-    private ICustomerDAO customerDAO;
+    private ICustomerDAO customerDao;
 
     public CustomerBL(ICustomerDAO customerDAO) {
-        this.customerDAO = customerDAO;
+        this.customerDao = customerDAO;
     }
 
     @Override
     public boolean insertCustomer(Customer customer) {
-        return false;
+        try {
+            customerDao.addCustomer(customer);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
     @Override
     public boolean updateCustomer(Name oldCustomerName, Customer updatedCustomer) {
-        return false;
+        try {
+            customerDao.modifyCustomer(oldCustomerName, updatedCustomer);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
     @Override
     public boolean deleteCustomer(Customer customer) {
-        return false;
+        try {
+            customerDao.removeCustomer(customer);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
     @Override
     public Customer searchCustomerByName(Name name) {
-        return null;
+        try {
+            return customerDao.findCustomerByName(name);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
     public Iterator<Customer> findAllCustomers() {
-        return null;
+        try {
+            return customerDao.findAllCustomers();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

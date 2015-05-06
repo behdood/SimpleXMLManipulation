@@ -7,7 +7,7 @@ public class CustomerDAOFactory {
 
     public CustomerIX getCustomerDao(String type) {
 //        if (type.equals("xml"))
-//            return new XmlCustomerDAO;
+//            return new JDomXmlCustomerDAO;
         return null;
     }
 

@@ -1,6 +1,7 @@
 package com.me.model.dto;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Customer {
@@ -17,6 +18,7 @@ public class Customer {
 
     public Customer(String firstName, String lastName, char middleInitial) {
         this.customerName = new Name(firstName, lastName, middleInitial);
+        contactDetails = new ArrayList<ContactDetail>();
     }
 
 

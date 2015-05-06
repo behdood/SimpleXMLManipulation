@@ -1,6 +1,8 @@
 package com.me.model.dto;
 
 
+import java.util.Objects;
+
 public class Name {
     private String firstName;
     private String lastName;
@@ -34,6 +36,22 @@ public class Name {
 
     public void setMiddleInitial(char middleInitial) {
         this.middleInitial = middleInitial;
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Name name = (Name) o;
+        return Objects.equals(middleInitial, name.middleInitial) &&
+                Objects.equals(firstName, name.firstName) &&
+                Objects.equals(lastName, name.lastName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(firstName, lastName, middleInitial);
     }
 
     @Override
