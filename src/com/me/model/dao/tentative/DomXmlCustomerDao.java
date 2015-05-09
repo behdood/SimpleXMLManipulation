@@ -1,7 +1,7 @@
-package com.me.model.dao;
+package com.me.model.dao.tentative;
 
 
-import com.me.model.dao.tentative.IReadWriteHandler;
+import com.me.model.dao.temp.IReadWriteHandler;
 import com.me.model.dto.*;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -9,34 +9,37 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.Iterator;
 
-public class CustomerDaoXmlDom implements ICustomerDAO {
+public class DomXmlCustomerDao implements CustomerDao {
 
     private Document document;
     private IReadWriteHandler readWriteHandler;
+    private String filename;
 
     private InputStream inputStream;
     private OutputStream outputStream;
 
-    public CustomerDaoXmlDom(InputStream inputStream, OutputStream outputStream, IReadWriteHandler readWriteHandler) throws ParserConfigurationException, SAXException, IOException {
-        this.inputStream = inputStream;
-        this.outputStream = outputStream;
-        this.readWriteHandler = readWriteHandler;
-
-        document = readWriteHandler.readStreamToDocument(inputStream);
-    }
-
-
-//    public DomXmlCustomerDao(String filename, IReadWriteHandler xmlReadWriteHandler) {
-//        this.filename = filename;
-//        this.readWriteHandler = xmlReadWriteHandler;
+//    public DomXmlCustomerDao(InputStream inputStream, OutputStream outputStream, IReadWriteHandler readWriteHandler) throws ParserConfigurationException, SAXException, IOException {
+//        this.inputStream = inputStream;
+//        this.outputStream = outputStream;
+//        this.readWriteHandler = readWriteHandler;
 //
-//        document = xmlReadWriteHandler.readStreamToDocument();
+//        document = readWriteHandler.readStreamToDocument(inputStream);
 //    }
+
+
+
+    public DomXmlCustomerDao(String filename, IReadWriteHandler xmlReadWriteHandler)
+            throws IOException, ParserConfigurationException, SAXException {
+        this.filename = filename;
+        this.readWriteHandler = xmlReadWriteHandler;
+
+        inputStream = new FileInputStream(filename);
+        outputStream = new FileOutputStream(filename);
+        document = xmlReadWriteHandler.readStreamToDocument(inputStream);
+    }
 //    public DomXmlCustomerDao(String filename) {
 //        this.filename = filename;
 //    }

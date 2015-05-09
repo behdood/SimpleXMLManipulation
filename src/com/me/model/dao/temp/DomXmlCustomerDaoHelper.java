@@ -1,4 +1,4 @@
-package com.me.model.dao.tentative;
+package com.me.model.dao.temp;
 
 
 import com.me.model.exceptions.InconsistentNodeException;

@@ -1,6 +1,6 @@
 package com.me.model.bl;
 
-import com.me.model.dao.ICustomerDAO;
+import com.me.model.dao.tentative.CustomerDao;
 import com.me.model.dto.Customer;
 import com.me.model.dto.Name;
 
@@ -8,9 +8,9 @@ import java.util.Iterator;
 
 public class CustomerBL implements CustomerIX {
 
-    private ICustomerDAO customerDao;
+    private CustomerDao customerDao;
 
-    public CustomerBL(ICustomerDAO customerDAO) {
+    public CustomerBL(CustomerDao customerDAO) {
         this.customerDao = customerDAO;
     }
 

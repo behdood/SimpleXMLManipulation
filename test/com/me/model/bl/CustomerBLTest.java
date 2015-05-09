@@ -1,7 +1,7 @@
 package com.me.model.bl;
 
 
-import com.me.model.dao.ICustomerDAO;
+import com.me.model.dao.tentative.CustomerDao;
 import com.me.model.dto.*;
 import org.junit.After;
 import org.junit.Before;
@@ -13,14 +13,14 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-public class TestCustomerBL {
+public class CustomerBLTest {
 
-    FakeCustomerDAO fakeCustomerDao;
+    FakeCustomerDao fakeCustomerDao;
     CustomerIX customerBL;
 
     @Before
     public void setUp() {
-        fakeCustomerDao = new FakeCustomerDAO();
+        fakeCustomerDao = new FakeCustomerDao();
         customerBL = new CustomerBL(fakeCustomerDao);
     }
 
@@ -122,15 +122,15 @@ public class TestCustomerBL {
                 .setNotes(" this is a note ");
     }
 
-    class FakeCustomerDAO implements ICustomerDAO {
+    class FakeCustomerDao implements CustomerDao {
 
         public List<Customer> customers;
 
-        public FakeCustomerDAO() {
+        public FakeCustomerDao() {
             customers = new ArrayList<Customer>();
         }
 
-        public FakeCustomerDAO(Customer c) {
+        public FakeCustomerDao(Customer c) {
             customers = new ArrayList<Customer>();
             customers.add(c);
         }

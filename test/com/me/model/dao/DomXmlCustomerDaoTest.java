@@ -1,13 +1,14 @@
 package com.me.model.dao;
 
 
-import com.me.model.dao.tentative.IReadWriteHandler;
-import com.me.model.dao.tentative.ReadWriteHandler;
+import com.me.model.dao.temp.IReadWriteHandler;
+import com.me.model.dao.temp.ReadWriteHandler;
+import com.me.model.dao.tentative.DomXmlCustomerDao;
+import com.me.model.dao.tentative.CustomerDao;
 import com.me.model.dto.Customer;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -23,14 +24,14 @@ import java.util.Iterator;
 
 import static org.junit.Assert.*;
 
-public class TestXmlDomCustomerDao {
+public class DomXmlCustomerDaoTest {
 
-    ICustomerDAO customerDAO;
+    CustomerDao customerDAO;
 //    String xmlFilename = "resources/temp.xml";
 //    String namespace;
 
-    InputStream is;
-    OutputStream os;
+    InputStream inputStream;
+    OutputStream outputStream;
     String xml;
 //    Document document;
     Element root_element;
@@ -39,10 +40,6 @@ public class TestXmlDomCustomerDao {
     XmlNodeAndCustomerMatcher_Helper matcher_helper;
     IReadWriteHandler readWriteHandler;
 
-    @BeforeClass
-    public static void classSetUp() throws ParserConfigurationException, IOException, SAXException {
-
-    }
 
     @Before
     public void setUp() throws IOException, SAXException, ParserConfigurationException {
@@ -50,17 +47,24 @@ public class TestXmlDomCustomerDao {
         matcher_helper = new XmlNodeAndCustomerMatcher_Helper();
 
         xml = readFakeFile();
-        initializeInputStream();
-        initializeOutputStream();
+        // initialize input stream
+        inputStream = new ByteArrayInputStream(xml.getBytes());
+        outputStream = new ByteArrayOutputStream();
+        // initialize output stream
+// //        StringWriter sw = new StringWriter();
+//        outputStream = new ByteArrayOutputStream();
+//        initializeInputStream();
+//        initializeOutputStream();
+
+        customerDAO = getFakeStreamsCustomerDao(readWriteHandler, inputStream, outputStream);
 //        customerDAO = new CustomerDAOFactory().getCustomerDao("xml", xmlFilename, new ReadWriteHandler());
-        customerDAO = getFakeStreamsCustomerDao(readWriteHandler);
 
 
         DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        is.reset();
-        Document doc = db.parse(is);
+        inputStream.reset();
+        Document doc = db.parse(inputStream);
         root_element = doc.getDocumentElement();
-//        document = ((CustomerDaoXmlDom)customerDAO).readStreamToDocument();
+//        document = ((DomXmlCustomerDao)customerDAO).readStreamToDocument();
 //        root_element = document.getDocumentElement();
 
 
@@ -186,7 +190,7 @@ public class TestXmlDomCustomerDao {
                 .addAddress("home", "street1", "street2", "12345", "fakeville")
                 .addPhone("work", "+358555555555")
                 .addEmail("work", "fake@fakedomain.com")
-                .setNotes(" this is a note ");
+                .setNotes(" this inputStream a note ");
     }
 
     private Customer makeFakeCustomerConan() {
@@ -195,7 +199,7 @@ public class TestXmlDomCustomerDao {
                 .addPhone("WORK_PHONE", "+358 555 555 555")
                 .addEmail("WORK_EMAIL", "conan.c.customer@example.com")
                 .addPhone("MOBILE_PHONE", "+358 50 999 999 999")
-                .setNotes("                                            Conan is a customer.\n\t\t");
+                .setNotes("                                            Conan inputStream a customer.\n\t\t");
     }
 
 
@@ -223,25 +227,24 @@ public class TestXmlDomCustomerDao {
                 "\t\t\t<Type>MOBILE_PHONE</Type>\n" +
                 "\t\t\t<Value>+358 50 999 999 999</Value>\n" +
                 "\t\t</Phone>\n" +
-                "\t\t<Notes>                                            Conan is a customer.\n" +
+                "\t\t<Notes>                                            Conan inputStream a customer.\n" +
                 "\t\t</Notes> \n" +
                 "\t</Customer>\n" +
                 "</Customers>\n";
     }
 
-    private void initializeInputStream() {
-        is = new ByteArrayInputStream(xml.getBytes());
-    }
+//    private void initializeInputStream() {
+//        inputStream = new ByteArrayInputStream(xml.getBytes());
+//    }
+//
+//    private void initializeOutputStream(){
+//        StringWriter sw = new StringWriter();
+//        outputStream = new ByteArrayOutputStream();
+//    }
 
-    private void initializeOutputStream(){
-        StringWriter sw = new StringWriter();
-        os = new ByteArrayOutputStream();
-
-    }
-
-    private ICustomerDAO getFakeStreamsCustomerDao(IReadWriteHandler readWriteHandler)
+    private CustomerDao getFakeStreamsCustomerDao(IReadWriteHandler readWriteHandler, InputStream is, OutputStream os)
             throws ParserConfigurationException, IOException, SAXException {
-        return new CustomerDaoXmlDom(is, os, readWriteHandler);
+        return new DomXmlCustomerDao(is, os, readWriteHandler);
     }
 
 

@@ -1,4 +1,4 @@
-package com.me.model.dao;
+package com.me.model.dao.tentative;
 
 
 import com.me.model.dto.Customer;
@@ -6,7 +6,7 @@ import com.me.model.dto.Name;
 
 import java.util.Iterator;
 
-public interface ICustomerDAO {
+public interface CustomerDao {
 
     void addCustomer(Customer c) throws Exception;
 
