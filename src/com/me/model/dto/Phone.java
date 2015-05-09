@@ -11,4 +11,11 @@ public class Phone extends ContactDetail {
         this.value = value;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }

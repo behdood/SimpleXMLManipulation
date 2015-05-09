@@ -9,4 +9,12 @@ public class Email extends ContactDetail{
         this.type = type;
         this.value = value;
     }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }

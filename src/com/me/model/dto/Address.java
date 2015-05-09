@@ -16,4 +16,25 @@ public class Address extends ContactDetail {
         this.postalCode = postalCode;
         this.town = town;
     }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getStreet1() {
+        return street1;
+    }
+
+    public String getStreet2() {
+        return street2;
+    }
+
+    public String getPostalCode() {
+        return postalCode;
+    }
+
+    public String getTown() {
+        return town;
+    }
 }
+
