@@ -1,52 +1,63 @@
 package com.me.model.dao.tentative;
 
 
+import com.me.model.dao.temp.DomXmlCustomerDaoHelper;
 import com.me.model.dao.temp.IReadWriteHandler;
-import com.me.model.dto.*;
+import com.me.model.dao.temp.ReadWriteHandler;
+import com.me.model.dto.Customer;
+import com.me.model.dto.Name;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.*;
 import java.util.Iterator;
 
 public class DomXmlCustomerDao implements CustomerDao {
 
-    private Document document;
-    private IReadWriteHandler readWriteHandler;
     private String filename;
 
     private InputStream inputStream;
     private OutputStream outputStream;
+    IReadWriteHandler handler;
+    DomXmlCustomerDaoHelper helper;
 
-//    public DomXmlCustomerDao(InputStream inputStream, OutputStream outputStream, IReadWriteHandler readWriteHandler) throws ParserConfigurationException, SAXException, IOException {
+
+//    public DomXmlCustomerDao(InputStream inputStream, OutputStream outputStream) throws ParserConfigurationException {
 //        this.inputStream = inputStream;
 //        this.outputStream = outputStream;
-//        this.readWriteHandler = readWriteHandler;
-//
-//        document = readWriteHandler.readStreamToDocument(inputStream);
+//        this.handler = new ReadWriteHandler();
+//        this.helper = new DomXmlCustomerDaoHelper();
 //    }
 
-
-
-    public DomXmlCustomerDao(String filename, IReadWriteHandler xmlReadWriteHandler)
-            throws IOException, ParserConfigurationException, SAXException {
+    public DomXmlCustomerDao(String filename) throws FileNotFoundException {
         this.filename = filename;
-        this.readWriteHandler = xmlReadWriteHandler;
-
-        inputStream = new FileInputStream(filename);
-        outputStream = new FileOutputStream(filename);
-        document = xmlReadWriteHandler.readStreamToDocument(inputStream);
+        initializeStreams();
     }
-//    public DomXmlCustomerDao(String filename) {
+
+    public DomXmlCustomerDao() throws FileNotFoundException {
+        filename = "resources/Customers.xml";
+        initializeStreams();
+    }
+
+//    public DomXmlCustomerDao(String filename, IReadWriteHandler xmlReadWriteHandler)
+//            /*throws IOException, ParserConfigurationException, SAXException */{
+//        this.filename = filename;
+//        this.readWriteHandler = xmlReadWriteHandler;
+
+//        inputStream = new FileInputStream(filename);
+//        outputStream = new FileOutputStream(filename);
+//        document = xmlReadWriteHandler.readStreamToDocument(inputStream);
+//    }
+//    public OLD_DomXmlCustomerDao(String filename) {
 //        this.filename = filename;
 //    }
 
     @Override
     public void addCustomer(Customer c) throws Exception {
-//        doc = dom.getDocumentElement();
 
     }
 
@@ -62,7 +73,25 @@ public class DomXmlCustomerDao implements CustomerDao {
 
     @Override
     public Customer findCustomerByName(Name name) throws Exception {
-        return null;
+        Document doc = handler.readStreamToDocument(inputStream);
+        Element root_element = doc.getDocumentElement();
+
+        boolean found = false;
+        Node customer;
+
+        customer = getFirstChildElement(root_element);
+        while (!found) {
+            // first child of each customer should be the Name tag
+            Node customer_name = getFirstChildElement(customer);
+            if (customer_name.getNodeName().equals("Name"))
+                found = true;
+            else
+                customer = getNextSiblingElement(customer);
+            if (customer == null)
+                break;
+        }
+
+        return helper.parseCustomerFromNode(customer);
     }
 
     @Override
@@ -70,24 +99,26 @@ public class DomXmlCustomerDao implements CustomerDao {
         return null;
     }
 
-
-
-//    private boolean nodeMatchesContactDetail(Node node, ContactDetail detail) {
-//        NodeList children = node.getChildNodes();
-//        if (detail instanceof Address) {
-//            if (children.getLength() != 5) return false;
-//
-//        }
-//        if (detail instanceof Phone || detail instanceof Email) {
-//            if (children.getLength() != 2) return false;
-//        }
-//    }
-
-    Document readStreamToDocument() throws ParserConfigurationException, SAXException, IOException {
-        return readWriteHandler.readStreamToDocument(inputStream);
+    private Node getFirstChildElement(Node node) {
+        Node child = node.getFirstChild();
+        while (!(child instanceof Element))
+            child = child.getNextSibling();
+        return child;
     }
 
-    void writeDocumentToStream(Document document) throws TransformerException {
-        readWriteHandler.writeDocumentToStream(document, outputStream);
+    private Node getNextSiblingElement(Node node) {
+        Node next_sibling = node.getNextSibling();
+        while (!(next_sibling instanceof Element))
+            next_sibling = next_sibling.getNextSibling();
+        return next_sibling;
+    }
+
+    private void initializeStreams() throws FileNotFoundException {
+        inputStream = new FileInputStream(filename);
+        outputStream = new FileOutputStream(filename);
+    }
+
+    private void resetInputStream() throws IOException {
+        inputStream.reset();
     }
 }

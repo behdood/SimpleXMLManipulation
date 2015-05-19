@@ -1,7 +1,7 @@
 package com.me.model.bl;
 
 
-import com.me.model.dao.tentative.CustomerDao;
+import com.me.model.dao.FakeCustomerDao;
 import com.me.model.dto.*;
 import org.junit.After;
 import org.junit.Before;
@@ -20,13 +20,16 @@ public class CustomerBLTest {
 
     @Before
     public void setUp() {
+
         fakeCustomerDao = new FakeCustomerDao();
+//        customerBL = new CustomerBL(fakeCustomerDao);
         customerBL = new CustomerBL(fakeCustomerDao);
+//        fakeCustomerDao = (FakeCustomerDao) fakeFactory.getCustomerDao();
     }
 
     @After
     public void tearDown() {
-        fakeCustomerDao.customers.clear();
+//        fakeCustomerDao.customers.clear();
     }
 
     @Test
@@ -94,7 +97,7 @@ public class CustomerBLTest {
 
     @Test
     public void testFindAllCustomers() {
-        List<Customer> customerList = new ArrayList<Customer>();
+        List<Customer> customerList = new ArrayList<>();
         customerList.add(makeFakeCustomer("fn1", "ln1", 'm'));
         customerList.add(makeFakeCustomer("fn2", "ln2", 'm'));
         customerList.add(makeFakeCustomer("fn3", "ln3", 'm'));
@@ -122,52 +125,8 @@ public class CustomerBLTest {
                 .setNotes(" this is a note ");
     }
 
-    class FakeCustomerDao implements CustomerDao {
-
-        public List<Customer> customers;
-
-        public FakeCustomerDao() {
-            customers = new ArrayList<Customer>();
-        }
-
-        public FakeCustomerDao(Customer c) {
-            customers = new ArrayList<Customer>();
-            customers.add(c);
-        }
-
-        @Override
-        public void addCustomer(Customer c) throws Exception {
-            customers.add(c);
-        }
-
-        @Override
-        public void modifyCustomer(Name oldCustomerName, Customer c) throws Exception {
-            for (Customer customer_in_list : customers) {
-                if (customer_in_list.getName().equals(oldCustomerName))
-                    customers.set(customers.indexOf(customer_in_list), c);
-            }
-        }
-
-        @Override
-        public void removeCustomer(Customer c) throws Exception {
-            customers.remove(c);
-        }
-
-        @Override
-        public Customer findCustomerByName(Name name) throws Exception {
-            for (Customer customer : customers) {
-                if (customer.getName().equals(name))
-                    return customer;
-            }
-            return null;
-        }
-
-        @Override
-        public Iterator<Customer> findAllCustomers() throws Exception {
-            return customers.iterator();
-        }
 
 
-    }
+
 
 }

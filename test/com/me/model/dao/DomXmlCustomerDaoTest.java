@@ -4,6 +4,7 @@ package com.me.model.dao;
 import com.me.model.dao.temp.IReadWriteHandler;
 import com.me.model.dao.temp.ReadWriteHandler;
 import com.me.model.dao.tentative.DomXmlCustomerDao;
+import com.me.model.dao.tentative.OLD_DomXmlCustomerDao;
 import com.me.model.dao.tentative.CustomerDao;
 import com.me.model.dto.Customer;
 
@@ -27,12 +28,12 @@ import static org.junit.Assert.*;
 public class DomXmlCustomerDaoTest {
 
     CustomerDao customerDAO;
-//    String xmlFilename = "resources/temp.xml";
+    private final String xmlFilename = "resources/temp.xml";
 //    String namespace;
 
     InputStream inputStream;
     OutputStream outputStream;
-    String xml;
+    String fakeXml;
 //    Document document;
     Element root_element;
 
@@ -46,17 +47,21 @@ public class DomXmlCustomerDaoTest {
         readWriteHandler = new ReadWriteHandler();
         matcher_helper = new XmlNodeAndCustomerMatcher_Helper();
 
-        xml = readFakeFile();
+        fakeXml = readFakeFile();
         // initialize input stream
-        inputStream = new ByteArrayInputStream(xml.getBytes());
-        outputStream = new ByteArrayOutputStream();
+        inputStream = new ByteArrayInputStream(fakeXml.getBytes());
+//        outputStream = new ByteArrayOutputStream();
+        outputStream = System.out;
+//        customerDAO = new DomXmlCustomerDao(inputStream, outputStream);
+        customerDAO = new DomXmlCustomerDao(xmlFilename);
+
         // initialize output stream
 // //        StringWriter sw = new StringWriter();
 //        outputStream = new ByteArrayOutputStream();
 //        initializeInputStream();
 //        initializeOutputStream();
 
-        customerDAO = getFakeStreamsCustomerDao(readWriteHandler, inputStream, outputStream);
+//        customerDAO = getFakeStreamsCustomerDao(readWriteHandler, inputStream, outputStream);
 //        customerDAO = new CustomerDAOFactory().getCustomerDao("xml", xmlFilename, new ReadWriteHandler());
 
 
@@ -64,7 +69,7 @@ public class DomXmlCustomerDaoTest {
         inputStream.reset();
         Document doc = db.parse(inputStream);
         root_element = doc.getDocumentElement();
-//        document = ((DomXmlCustomerDao)customerDAO).readStreamToDocument();
+//        document = ((OLD_DomXmlCustomerDao)customerDAO).readStreamToDocument();
 //        root_element = document.getDocumentElement();
 
 
@@ -108,7 +113,7 @@ public class DomXmlCustomerDaoTest {
     public void testModifyCustomer_details() throws Exception {
         Customer c = makeFakeCustomer("fn", "ln", 'm');
 
-        Customer c_modified = c;
+        Customer c_modified = c; // TODO: wrong! reference copying!
         c_modified.setNotes("new notes").addEmail("NEW_EMAIL", "new@new_domain.com");
 
 //        try {
@@ -150,7 +155,7 @@ public class DomXmlCustomerDaoTest {
         Customer c1 = makeFakeCustomer("fn1", "ln1", 'm');
 
         customerDAO.addCustomer(c1);
-
+        inputStream.reset();
         Customer res = customerDAO.findCustomerByName(c1.getName());
 
         assertEquals(res, c1);
@@ -242,10 +247,11 @@ public class DomXmlCustomerDaoTest {
 //        outputStream = new ByteArrayOutputStream();
 //    }
 
-    private CustomerDao getFakeStreamsCustomerDao(IReadWriteHandler readWriteHandler, InputStream is, OutputStream os)
-            throws ParserConfigurationException, IOException, SAXException {
-        return new DomXmlCustomerDao(is, os, readWriteHandler);
-    }
+//    private CustomerDao getFakeStreamsCustomerDao(IReadWriteHandler readWriteHandler, InputStream is, OutputStream os)
+//            throws ParserConfigurationException, IOException, SAXException {
+////        return new OLD_DomXmlCustomerDao(is, os, readWriteHandler);
+//        return new DomXmlCustomerDao(); // TODO
+//    }
 
 
 

@@ -1,34 +1,28 @@
 package com.me.model.dao.factories;
 
 
-import com.me.model.dao.tentative.AddressDao;
-import com.me.model.dao.tentative.CustomerDao;
-import com.me.model.dao.tentative.EmailDao;
-import com.me.model.dao.tentative.PhoneDao;
+import com.me.model.dao.tentative.*;
 
-public abstract class DaoFactory {
+import java.io.FileNotFoundException;
 
-    public static final int DOM_XML = 1;
-    public static final int STAX_XML = 2;
-    public static final int ORACLE_XE = 3;
+public /*abstract*/ class DaoFactory {
 
+    public static final int XML_DOM = 1;
+    public static final int XML_STAX = 2;
+    public static final int RDB_ORACLE_XE = 3;
 
 
-    public abstract CustomerDao getCustomerDao();
 
-    public abstract AddressDao getAddressDao();
+//    public abstract CustomerDao getCustomerDao();
 
-    public abstract EmailDao getEmailDao();
-
-    public abstract PhoneDao getPhoneDao();
-
-
-    public static DaoFactory getDaoFactory(int whichFactory) {
-        switch (whichFactory) {
-            case DOM_XML:
-                return new DomXmlDaoFactory();
-            case STAX_XML:
-                return new StaxXmlDaoFactory();
+    public static CustomerDao getCustomerDao(int type) throws FileNotFoundException {
+        switch (type) {
+            case XML_DOM:
+                return new DomXmlCustomerDao();
+            case XML_STAX:
+                return new StaxXmlCustomerDao();
+            case RDB_ORACLE_XE:
+                return new OracleXeCustomerDao();
             default:
                 return null;
         }
