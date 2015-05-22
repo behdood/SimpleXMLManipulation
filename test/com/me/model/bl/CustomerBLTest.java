@@ -125,8 +125,4 @@ public class CustomerBLTest {
                 .setNotes(" this is a note ");
     }
 
-
-
-
-
 }

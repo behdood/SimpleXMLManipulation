@@ -3,6 +3,7 @@ package com.me.model.dto;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Customer {
     private Name customerName;
@@ -73,4 +74,18 @@ public class Customer {
         return this;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Customer customer = (Customer) o;
+        return Objects.equals(customerName.toString(), customer.customerName.toString()) &&
+                Objects.equals(contactDetails, customer.contactDetails) &&
+                Objects.equals(notes, customer.notes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(customerName, contactDetails, notes);
+    }
 }

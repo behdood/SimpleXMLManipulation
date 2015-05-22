@@ -1,6 +1,8 @@
 package com.me.model.dto;
 
 
+import java.util.Objects;
+
 public class Address extends ContactDetail {
     private String type;
     private String street1;
@@ -35,6 +37,23 @@ public class Address extends ContactDetail {
 
     public String getTown() {
         return town;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Address address = (Address) o;
+        return Objects.equals(type, address.type) &&
+                Objects.equals(street1, address.street1) &&
+                Objects.equals(street2, address.street2) &&
+                Objects.equals(postalCode, address.postalCode) &&
+                Objects.equals(town, address.town);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, street1, street2, postalCode, town);
     }
 }
 

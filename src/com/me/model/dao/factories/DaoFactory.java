@@ -1,7 +1,11 @@
 package com.me.model.dao.factories;
 
 
-import com.me.model.dao.tentative.*;
+import com.me.model.dao.CustomerDao;
+import com.me.model.dao.DomXmlCustomerDao;
+import com.me.model.dao.OracleXeCustomerDao;
+import com.me.model.dao.StaxXmlCustomerDao;
+import com.me.model.dao.Utils.FileXmlDocumentRWUtils;
 
 import java.io.FileNotFoundException;
 
@@ -18,7 +22,7 @@ public /*abstract*/ class DaoFactory {
     public static CustomerDao getCustomerDao(int type) throws FileNotFoundException {
         switch (type) {
             case XML_DOM:
-                return new DomXmlCustomerDao();
+                return new DomXmlCustomerDao(new FileXmlDocumentRWUtils("resources/Customer.xml")); // todo
             case XML_STAX:
                 return new StaxXmlCustomerDao();
             case RDB_ORACLE_XE:

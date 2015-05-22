@@ -1,7 +1,6 @@
 package com.me.model.bl;
 
-import com.me.model.dao.factories.DaoFactory;
-import com.me.model.dao.tentative.CustomerDao;
+import com.me.model.dao.CustomerDao;
 import com.me.model.dto.Customer;
 import com.me.model.dto.Name;
 

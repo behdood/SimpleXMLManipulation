@@ -1,6 +1,7 @@
-package com.me.model.dao.tentative;
+package com.me.model.dao;
 
 
+import com.me.model.dao.CustomerDao;
 import com.me.model.dto.Customer;
 import com.me.model.dto.Name;
 

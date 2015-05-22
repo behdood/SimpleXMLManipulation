@@ -56,6 +56,8 @@ public class Name {
 
     @Override
     public String toString() {
+        if (middleInitial == '\0')
+            return firstName + ' ' + lastName;
         return firstName + ' ' + middleInitial + ". " + lastName;
     }
 }

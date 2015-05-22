@@ -1,4 +1,4 @@
-package com.me.model.dao.tentative;
+package com.me.model.dao;
 
 
 import com.me.model.dto.Customer;
