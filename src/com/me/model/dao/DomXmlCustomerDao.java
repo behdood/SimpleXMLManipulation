@@ -3,9 +3,12 @@ package com.me.model.dao;
 
 import com.me.model.dao.Utils.XmlDocumentRWUtils;
 import com.me.model.dto.*;
-import com.me.model.exceptions.CustomerDoesNotExistException;
-import com.me.model.exceptions.CustomerAlreadyExistException;
-import com.me.model.exceptions.InconsistentNodeException;
+import com.me.model.exceptions.io.XmlDocumentIOException;
+import com.me.model.exceptions.io.XmlDocumentReadException;
+import com.me.model.exceptions.io.XmlDocumentWriteException;
+import com.me.model.exceptions.invalid_customer.*;
+import com.me.model.exceptions.storage.CorruptStorageException;
+import com.me.model.exceptions.storage.MalformedXmlNodeException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -21,6 +24,7 @@ public class DomXmlCustomerDao implements CustomerDao {
 
     private XmlDocumentRWUtils rwUtils;
     private DomXmlCustomerDaoHelper daoHelper;
+    private Document document = null;
 
 
 //    DomXmlCustomerDao(String filename) throws FileNotFoundException {
@@ -30,110 +34,100 @@ public class DomXmlCustomerDao implements CustomerDao {
 //        daoHelper = new DomXmlCustomerDaoHelper();
 //    }
 
-    public DomXmlCustomerDao(XmlDocumentRWUtils rwUtils) throws FileNotFoundException {
+    public DomXmlCustomerDao(XmlDocumentRWUtils rwUtils) {
         this.rwUtils = rwUtils;
         this.daoHelper = new DomXmlCustomerDaoHelper();
     }
 
 
-
-
-
     @Override
-    public void addCustomer(Customer c) throws InconsistentNodeException, ParserConfigurationException, SAXException, IOException, TransformerException {
-        Document doc = loadDocument();
+    public void addCustomer(Customer c)
+            throws NullCustomerNameException, CustomerAlreadyExistException,
+            XmlDocumentIOException, InvalidCustomerObjectException {
+        Name name = c.getName();
+        if (isNameInvalid(name))
+            throw new NullCustomerNameException();
 
-        doc.getDocumentElement().appendChild(daoHelper.createNodeFromCustomer(doc, c));
+        loadDocument();
 
-        saveDocument(doc);
+        if (!findCustomerNodeByChildTag(document, "Name", name.toString()).isEmpty())
+            throw new CustomerAlreadyExistException();
+
+        document.getDocumentElement().appendChild(daoHelper.createNodeFromCustomer(document, c));
+
+        saveDocument();
     }
 
     @Override
     public void modifyCustomer(Name oldCustomerName, Customer c)
-            throws ParserConfigurationException, SAXException, IOException, InconsistentNodeException, CustomerDoesNotExistException, CustomerAlreadyExistException, TransformerException {
-        Document doc = loadDocument();
+            throws NullCustomerNameException, CustomerDoesNotExistException,
+            CorruptStorageException, XmlDocumentIOException, InvalidCustomerObjectException {
 
-//        Node customer_node = findCustomerNodeByChildTag(doc, "Name", oldCustomerName.toString());
-        Node customer_node = findCustomerNodeByName(doc, oldCustomerName);
-        doc.getDocumentElement().replaceChild(customer_node, daoHelper.createNodeFromCustomer(doc, c));
+        if (isNameInvalid(c.getName()))
+            throw new NullCustomerNameException();
 
-        //todo: write back to file
-        saveDocument(doc);
+        loadDocument();
+
+        Node customer_node = findCustomerNodeByName(document, oldCustomerName);
+        if (customer_node == null)
+            throw new CustomerDoesNotExistException();
+
+        Node new_node = daoHelper.createNodeFromCustomer(document, c);
+//        document.getDocumentElement().replaceChild(customer_node, new_node);
+        document.getDocumentElement().removeChild(customer_node);
+        document.getDocumentElement().appendChild(new_node);
+
+        saveDocument();
     }
 
     @Override
-    public void removeCustomer(Customer c) throws Exception {
-        Document doc = loadDocument();
+    public void removeCustomer(Customer c)
+            throws CustomerDoesNotExistException, CorruptStorageException, XmlDocumentIOException {
+        loadDocument();
 
         Name name = c.getName();
-        Node customer_node = findCustomerNodeByName(doc, name);
+        Node customer_node = findCustomerNodeByName(document, name);
 
         if (customer_node == null)
             throw new CustomerDoesNotExistException("Customer with name " + name.toString() + " does not exist.");
 
-        doc.getDocumentElement().removeChild(customer_node);
+        document.getDocumentElement().removeChild(customer_node);
 
-        // todo: write back to Document
-//        root_element.getOwnerDocument();
-//customer_node.getParentNode().re
-        saveDocument(doc);
-
+        saveDocument();
     }
 
     @Override
     public Customer findCustomerByName(Name name)
-            throws CustomerDoesNotExistException, InconsistentNodeException, ParserConfigurationException, SAXException, IOException, CustomerAlreadyExistException {
-        Document doc = loadDocument();
-        Node customer_node = findCustomerNodeByName(doc, name);
+            throws XmlDocumentReadException, CorruptStorageException {
 
-//        Element root_element = getRootElement();
-//
-//        Document doc = rwUtils.readDocument(new FileInputStream(filename));
-//        NodeList all_names = doc.getElementsByTagName("Name");
-//
-//        for (int i = 0; i < all_names.getLength(); i++) {
-//            Node n = all_names.item(i);
-//            System.out.println(n.getTextContent());
-//        }
-//
-//        Node p = all_names.item(2).getParentNode();
-//        System.out.println(p.getNodeName());
-////        doc.removeChild(p);
-//
-//        doc.getDocumentElement().removeChild(p);
-//
-//        System.out.println();
-//        NodeList all2 = doc.getElementsByTagName("Name");
-//        for (int i = 0; i < all2.getLength(); i++) {
-//            Node n = all2.item(i);
-//            System.out.println(n.getTextContent());
-//        }
-//
-//        Node customer_node = findCustomerNodeByName(root_element, name);
-//
-//        if (customer_node == null)
-//            throw new CustomerDoesNotExistException("Customer with name " + name.toString() + " does not exist.");
-        return daoHelper.parseCustomerFromNode(customer_node);
+        loadDocument();
+        Element customer_node = findCustomerNodeByName(document, name);
+        if (customer_node == null)
+            return null;
+
+        return daoHelper.parseCustomerFromElement(customer_node);
         // no need to save anything
     }
 
     @Override
-    public Iterator<Customer> findAllCustomers() throws Exception {
+    public Iterator<Customer> findAllCustomers()
+            throws XmlDocumentReadException, CorruptStorageException {
 
-        Document doc = loadDocument();
-
+        loadDocument();
 
         List<Customer> customer_list = new ArrayList<>();
 
-        NodeList nodeList = doc.getDocumentElement().getChildNodes();
+        NodeList nodeList = document.getDocumentElement().getChildNodes();
 
         for (int i = 0; i < nodeList.getLength(); i++) {
             Node n = nodeList.item(i);
             if (n instanceof Element)
-                customer_list.add(daoHelper.parseCustomerFromNode(n));
+                customer_list.add(daoHelper.parseCustomerFromElement((Element) n));
         }
 
         // no need to save anything
+        if (customer_list.size() == 0)
+            return null;
         return customer_list.iterator();
 
 //
@@ -148,158 +142,110 @@ public class DomXmlCustomerDao implements CustomerDao {
 //        return customer_list.iterator();
     }
 
-//    private Node getFirstChildElement(Node node) {
-//        Node child = node.getFirstChild();
-//        while (child != null) {
-//            if (child instanceof Element)
-//                break;
-//            child = child.getNextSibling();
-//        }
-//        return child;
-//    }
-//
-//    private Node getNextSiblingElement(Node node) {
-//        Node next_sibling = node.getNextSibling();
-//
-//        while (next_sibling != null) {
-//            if (next_sibling instanceof Element)
-//                break;
-//            next_sibling = next_sibling.getNextSibling();
-//        }
-//        return next_sibling;
-//    }
-
-//    private void initializeStreams() throws FileNotFoundException {
-////        inputStream = new FileInputStream(filename);
-////        outputStream = new FileOutputStream(filename);
-//    }
-
-//    private void resetInputStream() throws IOException {
-////        inputStream.reset();
-//    }
-
-//    private Element getRootElement() throws IOException, SAXException, ParserConfigurationException {
-//        return rwUtils.readDocument(new FileInputStream(filename)).getDocumentElement();
-//    }
 
 
-    private Document loadDocument() throws IOException, SAXException, ParserConfigurationException {
-        return rwUtils.loadDocument();
-    }
-
-    private void saveDocument(Document doc) throws TransformerException, FileNotFoundException {
-        rwUtils.saveDocument(doc);
+    private boolean isNameInvalid(Name name) {
+        return (name == null || !name.isValid());
     }
 
 
-//    private Document getDocument() throws IOException, SAXException, ParserConfigurationException {
-//        return rwUtils.readDocument(new FileInputStream(filename));
-//    }
+    private void loadDocument() throws XmlDocumentReadException {
+        if (document == null)
+            try {
+                document = rwUtils.loadDocument();
+            } catch (IOException e) {
+                throw new XmlDocumentReadException("Unable to load the document due to: IOException");
+            } catch (SAXException e) {
+                throw new XmlDocumentReadException("Unable to load the document due to: SAXException");
+            } catch (ParserConfigurationException e) {
+                throw new XmlDocumentReadException("Unable to load the document due to: ParserConfigurationException");
+            }
+    }
 
-//    private Node findCustomerNodeByName(Element root_element, Name customer_name)
-//            throws InconsistentNodeException {
-//        Node customer_node = getFirstChildElement(root_element);
-//        while (customer_node != null) {
-//            Node name_node = getFirstChildElement(customer_node);
-//
-//            // sanity check!
-//            if (!name_node.getNodeName().equals("Name"))
-//                throw new InconsistentNodeException("first child of each customer node should be the Name tag");
-//
-//            if (name_node.getTextContent().equals(customer_name.toString()))
-//                return customer_node;
-//
-//            customer_node = getNextSiblingElement(customer_node);
-//
-//        }
-//        return null;
-//    }
+    private void saveDocument() throws XmlDocumentWriteException {
+        try {
+            rwUtils.saveDocument(document);
+        } catch (TransformerException e) {
+            throw new XmlDocumentWriteException("Unable to save the document due to: TransformerException");
+        } catch (FileNotFoundException e) {
+            throw new XmlDocumentWriteException("Unable to save the document due to: FileNotFoundException");
+        }
+    }
 
-    private Node findCustomerNodeByName(Document document, Name customer_name)
-            throws InconsistentNodeException, CustomerDoesNotExistException, CustomerAlreadyExistException {
-        Set<Node> nodeSet = findCustomerNodeByChildTag(document, "Name", customer_name.toString());
+
+    private Element findCustomerNodeByName(Document document, Name customer_name) throws CorruptStorageException {
+        Set<Element> nodeSet = findCustomerNodeByChildTag(document, "Name", customer_name.toString());
 
         if (nodeSet.isEmpty())
-            throw new CustomerDoesNotExistException();
-
+            return null;
 
         // there should be only one node with any given name
         if (nodeSet.size() > 1)
-            throw new CustomerAlreadyExistException();
+            throw new CorruptStorageException("Multiple customers exist with name " + customer_name.toString());
 
         return nodeSet.iterator().next();
     }
 
-    private Set<Node> findCustomerNodeByChildTag(Document document, String detail_tag, String value) {
+    private Set<Element> findCustomerNodeByChildTag(Document document, String detail_tag, String value) {
         NodeList tag_nodes = document.getElementsByTagName(detail_tag);
 
-        Set<Node> node_set = new HashSet<>();
+        Set<Element> node_set = new HashSet<>();
         for (int i = 0; i < tag_nodes.getLength(); i++) {
             Node n = tag_nodes.item(i);
 
             if (n.getTextContent().equals(value))
-                node_set.add(n.getParentNode());
-//                return n.getParentNode();
+                node_set.add((Element) n.getParentNode());
         }
-
         return node_set;
-//        return null;
     }
 
 
     private static class DomXmlCustomerDaoHelper {
 
-        public Customer parseCustomerFromNode(Node customer_node) throws InconsistentNodeException {
-            if (customer_node == null)
+        public Customer parseCustomerFromElement(Element customer_element)
+                throws MalformedXmlNodeException {
+            if (customer_element == null)
                 return null;
 
-            if (!customer_node.getNodeName().equals("Customer"))
-                throw new InconsistentNodeException("Should be a Customer node. Instead, it is : " + customer_node.getNodeName());
+            if (!customer_element.getNodeName().equals("Customer"))
+                throw new MalformedXmlNodeException("Should be a \"Customer\" node. Instead, it is : "
+                        + customer_element.getNodeName());
 
-//        Node first_child = customer_node.getFirstChild();
-//        if (!first_child.getNodeName().equals("Name"))
-//            throw new InconsistentNodeException("Should be a Name element. Instead, it is : " + first_child.getNodeName());
+            NodeList names = customer_element.getElementsByTagName("Name");
+            if (names.getLength() != 1)
+                throw new MalformedXmlNodeException("Customer node should have exactly one \"Name\" child. " +
+                        "instead, it has " + names.getLength() + "\n");
+            Customer customer = new Customer(names.item(0).getTextContent());
 
+            NodeList notes = customer_element.getElementsByTagName("Notes");
+            if (notes.getLength() > 1)
+                throw new MalformedXmlNodeException("Customer node could have at most one \"Notes\" child. " +
+                        "instead, it has " + notes.getLength() + "\n");
+            if (notes.getLength() > 0)
+                customer.setNotes(notes.item(0).getTextContent());
 
-//        String customer_name = first_child.getNodeValue();
-            Customer customer = new Customer("tmp", "", '\0');
-
-            NodeList children = customer_node.getChildNodes();
+            NodeList children = customer_element.getChildNodes();
             for (int i = 0; i < children.getLength(); i++) {
                 Node child = children.item(i);
                 if (!(child instanceof Element))
                     continue;
 
                 String child_name = child.getNodeName();
-                switch (child_name) {
-                    case "Name":
-                        customer.setName(new Name(child.getTextContent(), "", '\0'));
-                        break;
-                    case "Address":
-                        customer.addAddress((Address) parseContactDetailFromNode(child));
-                        break;
-                    case "Phone":
-                        customer.addPhone((Phone) parseContactDetailFromNode(child));
-                        break;
-                    case "Email":
-                        customer.addEmail((Email) parseContactDetailFromNode(child));
-                        break;
-                    case "Notes":
-                        customer.setNotes(child.getNodeValue());
-                        break;
-                    default:
-                        throw new InconsistentNodeException("Unknown child of Customer element : " + child_name);
-                }
+                if (child_name.equals("Name") || child_name.equals("Notes"))
+                    continue;   // Name and notes two have already been dealt with
+
+                customer.addDetail(parseContactDetailFromElement((Element) child, child_name));
             }
             return customer;
         }
 
-        public Node createNodeFromCustomer(Document document, Customer customer) throws InconsistentNodeException {
-            Node customer_node = document.createElement("Customer");
-//            Node customer_node = document.createElementNS("Customer" ,document.getNamespaceURI());
+        public Node createNodeFromCustomer(Document document, Customer customer)
+                throws InvalidCustomerObjectException {
+
+            Element customer_node = document.createElement("Customer");
 
             customer_node.appendChild(document.createElement("Name")).setTextContent(customer.getName().toString());
-            customer_node = appendContactDetails(document, customer_node, customer.getContactDetails());
+            customer_node = (Element) appendContactDetails(document, customer_node, customer.getContactDetails());
             customer_node.appendChild(document.createElement("Notes")).setTextContent(customer.getNotes());
 
             return customer_node;
@@ -307,7 +253,7 @@ public class DomXmlCustomerDao implements CustomerDao {
 
 
         private Node appendContactDetails(Document doc, Node customer_node, List<ContactDetail> contactDetails)
-                throws InconsistentNodeException {
+                throws InvalidCustomerObjectException {
             for (ContactDetail detail : contactDetails) {
                 if (detail.getContactType().equals(ContactDetail.CONTACT_TYPE.ADDRESS)) {
                     Address address = (Address) detail;
@@ -320,8 +266,7 @@ public class DomXmlCustomerDao implements CustomerDao {
                     address_node.appendChild(doc.createElement("Town")).setTextContent(address.getTown());
 
                     customer_node.appendChild(address_node);
-                }
-                else if (detail.getContactType().equals(ContactDetail.CONTACT_TYPE.PHONE)) {
+                } else if (detail.getContactType().equals(ContactDetail.CONTACT_TYPE.PHONE)) {
                     Phone phone = (Phone) detail;
                     Element phone_node = doc.createElement("Phone");
 
@@ -339,43 +284,35 @@ public class DomXmlCustomerDao implements CustomerDao {
 
                     customer_node.appendChild(email_node);
                 } else
-                    throw new InconsistentNodeException("unknown contact detail!");
+                    throw new InvalidCustomerObjectException("unknown contact detail!");
             }
 
             return customer_node;
         }
 
-        private ContactDetail parseContactDetailFromNode(Node node) throws InconsistentNodeException {
-            NodeList children = node.getChildNodes();
+        private ContactDetail parseContactDetailFromElement(Element element, String node_name)
+                throws MalformedXmlNodeException {
+            NodeList children = element.getChildNodes();
 
-            String s = node.getNodeName();
-            int children_count;
-            switch (s) {
+            Iterator<String> vals; // todo: check for validity and order of children elements
+
+            switch (node_name) {
                 case "Address":
-                    children_count = 5;
-                    break;
-                case "Email":
-                case "Phone":
-                    children_count = 2;
-                    break;
-                default:
-                    throw new InconsistentNodeException("Unknown child of Customer element : " + s);
-            }
-
-            Iterator<String> vals = traverseNodeList(children, children_count);
-
-            switch (s) {
-                case "Address":
+                    vals = traverseNodeList(children, 5);
                     return new Address(vals.next(), vals.next(), vals.next(), vals.next(), vals.next());
                 case "Email":
+                    vals = traverseNodeList(children, 2);
                     return new Email(vals.next(), vals.next());
-                default:
-// s.equals("Phone"))
+                case "Phone":
+                    vals = traverseNodeList(children, 2);
                     return new Phone(vals.next(), vals.next());
+                default:
+                    throw new MalformedXmlNodeException("Unknown child of Customer element : " + node_name);
             }
         }
 
-        private Iterator<String> traverseNodeList(NodeList nodeList, int childrenCount) throws InconsistentNodeException {
+        private Iterator<String> traverseNodeList(NodeList nodeList, int childrenCount)
+                throws MalformedXmlNodeException {
             int nValidChildren = 0;
 
             List<String> children_values = new ArrayList<>();
@@ -388,7 +325,8 @@ public class DomXmlCustomerDao implements CustomerDao {
                 children_values.add(field.getTextContent());
             }
             if (nValidChildren != childrenCount)
-                throw new InconsistentNodeException("Element has " + nodeList.getLength() + " children instead of " + childrenCount);
+                throw new MalformedXmlNodeException("Element has " + nodeList.getLength()
+                        + " children instead of " + childrenCount);
 
             return children_values.iterator();
         }

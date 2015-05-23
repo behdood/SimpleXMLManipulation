@@ -9,27 +9,27 @@ import java.util.Iterator;
 
 public class StaxXmlCustomerDao implements CustomerDao {
     @Override
-    public void addCustomer(Customer c) throws Exception {
+    public void addCustomer(Customer c) {
         throw new RuntimeException("Not implemented yet!");
     }
 
     @Override
-    public void modifyCustomer(Name oldCustomerName, Customer c) throws Exception {
+    public void modifyCustomer(Name oldCustomerName, Customer c)  {
         throw new RuntimeException("Not implemented yet!");
     }
 
     @Override
-    public void removeCustomer(Customer c) throws Exception {
+    public void removeCustomer(Customer c)  {
         throw new RuntimeException("Not implemented yet!");
     }
 
     @Override
-    public Customer findCustomerByName(Name name) throws Exception {
+    public Customer findCustomerByName(Name name) {
         throw new RuntimeException("Not implemented yet!");
     }
 
     @Override
-    public Iterator<Customer> findAllCustomers() throws Exception {
+    public Iterator<Customer> findAllCustomers() {
         throw new RuntimeException("Not implemented yet!");
     }
 }

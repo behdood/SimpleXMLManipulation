@@ -22,12 +22,12 @@ public class FakeCustomerDao implements CustomerDao {
     }
 
     @Override
-    public void addCustomer(Customer c) throws Exception {
+    public void addCustomer(Customer c)  {
         customers.add(c);
     }
 
     @Override
-    public void modifyCustomer(Name oldCustomerName, Customer c) throws Exception {
+    public void modifyCustomer(Name oldCustomerName, Customer c)  {
         for (Customer customer_in_list : customers) {
             if (customer_in_list.getName().equals(oldCustomerName))
                 customers.set(customers.indexOf(customer_in_list), c);
@@ -35,12 +35,12 @@ public class FakeCustomerDao implements CustomerDao {
     }
 
     @Override
-    public void removeCustomer(Customer c) throws Exception {
+    public void removeCustomer(Customer c) {
         customers.remove(c);
     }
 
     @Override
-    public Customer findCustomerByName(Name name) throws Exception {
+    public Customer findCustomerByName(Name name) {
         for (Customer customer : customers) {
             if (customer.getName().equals(name))
                 return customer;
@@ -49,7 +49,7 @@ public class FakeCustomerDao implements CustomerDao {
     }
 
     @Override
-    public Iterator<Customer> findAllCustomers() throws Exception {
+    public Iterator<Customer> findAllCustomers() {
         return customers.iterator();
     }
 

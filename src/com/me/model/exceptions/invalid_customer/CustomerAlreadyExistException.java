@@ -1,7 +1,7 @@
-package com.me.model.exceptions;
+package com.me.model.exceptions.invalid_customer;
 
 
-public class CustomerAlreadyExistException extends BaseException {
+public class CustomerAlreadyExistException extends CustomerException {
 
     public CustomerAlreadyExistException() {
         super("Customer node already exists.");

@@ -1,32 +1,28 @@
 package com.me.model.dao;
 
 
+import com.me.model.dao.Utils.FakeXmlString;
 import com.me.model.dao.Utils.FileXmlDocumentRWUtils;
 import com.me.model.dto.*;
 
-import com.me.model.exceptions.CustomerDoesNotExistException;
-import com.me.model.exceptions.CustomerAlreadyExistException;
-import com.me.model.exceptions.InconsistentNodeException;
+import com.me.model.exceptions.invalid_customer.CustomerDoesNotExistException;
+import com.me.model.exceptions.invalid_customer.CustomerAlreadyExistException;
+import com.me.model.exceptions.invalid_customer.NullCustomerNameException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 
 import org.xml.sax.SAXException;
 
 
 import javax.xml.parsers.*;
 import javax.xml.transform.Source;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamSource;
 
 import java.io.*;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Scanner;
 
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
 import static org.xmlmatchers.transform.XmlConverters.the;
 import static org.xmlmatchers.transform.XmlConverters.xml;
@@ -37,15 +33,16 @@ public class DomXmlCustomerDaoTest {
 
     private final String XML_TEST_FILE = "resources/temp_test.xml";
     private final int nInitialCustomers = 3;
-
+    private final File TEST_FILE = new File(XML_TEST_FILE);
+    private final String CHAR_SET = "UTF-8";
     private CustomerDao customerDAO;
-//    private final String CHAR_SET = "UTF-8";
+
 
     @Before
     public void setUp() throws IOException, SAXException, ParserConfigurationException {
 
         // at the beginning there are customers in file with names: "fn{i} m. ln{i}"
-        createTestFileWithCustomers(new File(XML_TEST_FILE), nInitialCustomers);
+        createTestFileWithCustomers();
 
 //        NamespaceContext usingNamespaces = new SimpleNamespaceContext().withBinding("my_ns", "http://www.arcusys.fi/customer-example");
 
@@ -62,15 +59,17 @@ public class DomXmlCustomerDaoTest {
 
     @After
     public void tearDown() throws IOException {
-        new File(XML_TEST_FILE).delete();
+//        new File(XML_TEST_FILE).delete();
     }
 
 
     @Test
     public void addCustomer() throws Exception {
         Customer c0 = makeFakeCustomerConan();
-        Customer c1 = makeFakeCustomer("fn", "", '\0');
-        Customer c2 = makeFakeCustomer("f n", "l n", 'm');
+        Customer c1 = makeFakeCustomer("fn");
+        Customer c2 = makeFakeCustomer("f n m. l n");
+//        Customer c1 = makeFakeCustomer("fn", "", '\0');
+//        Customer c2 = makeFakeCustomer("f n", "l n", 'm');
 
 
         customerDAO.addCustomer(c0);
@@ -79,179 +78,186 @@ public class DomXmlCustomerDaoTest {
 
 
         String xml_string = readFileIntoString();
-        assertDocumentContainsManyCustomer(xml(xml_string), nInitialCustomers + 3);
-        assertDocumentContainsCustomer(xml(xml_string), c0);
-        assertDocumentContainsCustomer(xml(xml_string), c1);
-        assertDocumentContainsCustomer(xml(xml_string), c2);
+
+//        String xml1 = "<mountains><mountain>K2</mountain></mountains>";
+//        String xml2 = "<mountains><mountain>\n\tK2\n\t </mountain></mountains>";
+//        assertThat(the(xml1), isEquivalentTo(the(xml2)));
+        Source xx = the(xml_string);
+
+//        assertThat(xml(xml_string), hasXPath("/Customers"));
+//        assertThat(xml(xml_string), hasXPath("/Customers/Customer"));
+        MatcherHelper.assertDocumentContainsCorrectNumberOfCustomers(xml(xml_string), nInitialCustomers + 3);
+        MatcherHelper.assertDocumentContainsCustomer(xml(xml_string), c0);
+        MatcherHelper.assertDocumentContainsCustomer(xml(xml_string), c1);
+        MatcherHelper.assertDocumentContainsCustomer(xml(xml_string), c2);
+    }
+
+    @Test(expected = NullCustomerNameException.class)
+    public void addCustomer_nullNameThrowsException() throws Exception {
+        Customer c_null = makeFakeCustomer("");
+
+
+        customerDAO.addCustomer(c_null);
     }
 
     @Test(expected = CustomerAlreadyExistException.class)
     public void addCustomer_duplicateThrowsException() throws Exception {
-        Customer c = makeFakeCustomer("dup", "duplicate", 'm');
-        Customer c_duplicate = makeFakeCustomer("dup", "duplicate", 'm');
+        Customer c = makeFakeCustomer("duplicate");
+        Customer c_duplicate = makeFakeCustomer("duplicate");
 
 
         customerDAO.addCustomer(c);
         customerDAO.addCustomer(c_duplicate);
     }
 
-    @Test(expected = InconsistentNodeException.class)
-    public void addCustomer_nullNameThrowsException() throws Exception {
-        Customer c_null = makeFakeCustomer("", "", '\0');
+    @Test
+    public void modifyCustomer_details() throws Exception {
+        Customer c_existing = makeFakeCustomer("fn2 m. ln2");
+        Customer c_modified = makeFakeCustomer("fn2 m. ln2")
+                .setNotes("new notes").addEmail("NEW_EMAIL", "new@new_domain.com");
 
+        customerDAO.modifyCustomer(c_existing.getName(), c_modified);
 
-        customerDAO.addCustomer(c_null);
+        String xml_string = readFileIntoString();
+        MatcherHelper.assertDocumentContainsCorrectNumberOfCustomers(xml(xml_string), nInitialCustomers);
+        MatcherHelper.assertDocumentContainsCustomer(xml(xml_string), c_modified);
+        MatcherHelper.assertDocumentNotContainCustomer(xml(xml_string), c_existing);
     }
 
     @Test
     public void modifyCustomer_name() throws Exception {
-        Customer c_existing = makeFakeCustomer("fn2", "ln2", 'm');
-        Customer c_modified = makeFakeCustomer("fnew", "lnew", 'm');
+        Customer c_existing = makeFakeCustomer("fn2 m. ln2");
+        Customer c_modified = makeFakeCustomer("fnew m. lnew");
 
 
         customerDAO.modifyCustomer(c_existing.getName(), c_modified);
 
 
         String xml_string = readFileIntoString();
-        assertDocumentContainsManyCustomer(xml(xml_string), nInitialCustomers);
-        assertDocumentContainsCustomer(xml(xml_string), c_modified);
-        assertDocumentNotContainCustomer(xml(xml_string), c_existing);
+        MatcherHelper.assertDocumentContainsCorrectNumberOfCustomers(xml(xml_string), nInitialCustomers);
+        MatcherHelper.assertDocumentContainsCustomer(xml(xml_string), c_modified);
+        MatcherHelper.assertDocumentNotContainCustomerName(xml(xml_string), c_existing);
     }
 
-    @Test
-    public void modifyCustomer_details() throws Exception { // TODO
-        Customer c_modified = makeFakeCustomer("fn2", "ln2", 'm');
-        c_modified.setNotes("new notes").addEmail("NEW_EMAIL", "new@new_domain.com");
+    @Test(expected = NullCustomerNameException.class)
+    public void modifyCustomer_name_nullNameThrowsException() throws Exception {
+        Customer c_existing = makeFakeCustomer("fn2 m, ln2");
+        Customer c_null = makeFakeCustomer("");
 
-
-        customerDAO.modifyCustomer(c_modified.getName(), c_modified);
-
-
-        String xml_string = readFileIntoString();
-        assertDocumentContainsManyCustomer(xml(xml_string), nInitialCustomers);
-        assertDocumentContainsCustomer(xml(xml_string), c_modified);
+        customerDAO.modifyCustomer(c_existing.getName(), c_null);
     }
 
     @Test(expected = CustomerDoesNotExistException.class)
-    public void modifyCustomer_NonExistentThrowsException() throws Exception {
-        Customer c_nonexistent = makeFakeCustomer("non", "existent", 'm');
+    public void modifyCustomer_nonExistentThrowsException() throws Exception {
+        Customer c_nonexistent = makeFakeCustomer("non existent");
 
         customerDAO.modifyCustomer(c_nonexistent.getName(), c_nonexistent);
     }
 
     @Test
-    public void testRemoveCustomer() throws Exception {
-        Customer c_existing = makeFakeCustomer("fn2", "ln2", 'm');
-
+    public void removeCustomer() throws Exception {
+        Customer c_existing = makeFakeCustomer("fn2 m. ln2");
 
         customerDAO.removeCustomer(c_existing);
 
-
         String xml_string = readFileIntoString();
-        assertDocumentContainsManyCustomer(xml(xml_string), nInitialCustomers - 1);
-        assertDocumentNotContainCustomer(xml(xml_string), c_existing);
+        MatcherHelper.assertDocumentContainsCorrectNumberOfCustomers(xml(xml_string), nInitialCustomers - 1);
+        MatcherHelper.assertDocumentNotContainCustomer(xml(xml_string), c_existing);
+        MatcherHelper.assertDocumentNotContainCustomerName(xml(xml_string), c_existing);
     }
 
     @Test(expected = CustomerDoesNotExistException.class)
-    public void removeCustomer_NonExistentThrowsException() throws Exception {
-        Customer c_nonexistent = makeFakeCustomer("non", "existent", 'm');
+    public void removeCustomer_nonExistentThrowsException() throws Exception {
+        Customer c_nonexistent = makeFakeCustomer("non existent");
 
         customerDAO.removeCustomer(c_nonexistent);
     }
 
     @Test
     public void findCustomerByName() throws Exception {
-        Customer c_existing = makeFakeCustomer("fn2", "ln2", 'm');
-
+        Customer c_existing = makeFakeCustomer("fn2 m. ln2");
 
         Customer res = customerDAO.findCustomerByName(c_existing.getName());
-
 
         assertEquals(res, c_existing);
     }
 
     @Test
-    public void findCustomerByName_NonExistentReturnsNull() throws Exception {
-        Name name_nonexistent = new Name("non", "existent", 'm');
-
+    public void findCustomerByName_nonExistentReturnsNull() throws Exception {
+        Name name_nonexistent = new Name("non existent");
 
         Customer res = customerDAO.findCustomerByName(name_nonexistent);
 
+        assertNull(res);
+    }
+
+    @Test
+    public void findAllCustomers() throws Exception {
+        // all three should exist in the document at the beginning
+        Customer c1 = makeFakeCustomer("fn1 m. ln1");
+        Customer c2 = makeFakeCustomer("fn2 m. ln2");
+        Customer c3 = makeFakeCustomer("fn3 m. ln3");
+
+        Iterator<Customer> res = customerDAO.findAllCustomers();
+
+        assertEquals(res.next(), c1);
+        assertEquals(res.next(), c2);
+        assertEquals(res.next(), c3);
+        assertFalse(res.hasNext());
+    }
+
+    @Test
+    public void findAllCustomers_emptyDocumentReturnsNull() throws Exception {
+        // all three should exist in the document at the beginning
+        Customer c1 = makeFakeCustomer("fn1 m. ln1");
+        Customer c2 = makeFakeCustomer("fn2 m. ln2");
+        Customer c3 = makeFakeCustomer("fn3 m. ln3");
+
+        customerDAO.removeCustomer(c1);
+        customerDAO.removeCustomer(c2);
+        customerDAO.removeCustomer(c3);
+
+        Iterator<Customer> res = customerDAO.findAllCustomers();
 
         assertNull(res);
     }
 
 
-    @Test
-    public void findAllCustomers() throws Exception {
-        // all three should exist in the document at the beginning
-        Customer c1 = makeFakeCustomer("fn1", "ln1", 'm');
-        Customer c2 = makeFakeCustomer("fn2", "ln2", 'm');
-        Customer c3 = makeFakeCustomer("fn3", "ln3", 'm');
+    private void createTestFileWithCustomers() throws IOException {
+//        if (!TEST_FILE.exists())
+//            TEST_FILE.createNewFile();
 
-
-        Iterator<Customer> res = customerDAO.findAllCustomers();
-
-
-        assertEquals(res.next(), c1);
-        assertEquals(res.next(), c2);
-        assertEquals(res.next(), c3);
-        assertNull(res.hasNext());
-    }
-
-
-
-    private void createTestFileWithCustomers(File file, int initialCustomers) throws IOException {
-        if (!file.exists())
-            file.createNewFile();
-
-        String s = "<Customers xmlns=\"http://www.arcusys.fi/customer-example\">";
-        for (int i = 0; i < initialCustomers; i++) {
-            s += (new FakeXmlString(makeFakeCustomer("fn" + i, "ln" + i, 'm'))).toString();
-        }
-        s += "</Customers>";
-
-        FileOutputStream fos = new FileOutputStream(file);
-        fos.write(s.getBytes());
+        String exampleXml = createFakeStringWithCustomers();
+        FileOutputStream fos = new FileOutputStream(TEST_FILE);
+        fos.write(exampleXml.getBytes());
         fos.close();
     }
 
-
-
-//    private void assertDocumentContainsCustomer(Node root_node, Customer customer) {
-//        matcher_helper.assertDocumentContainsCustomer(root_node, customer);
-//    }
-
-    private void assertDocumentContainsManyCustomer(Source source, int how_many) {
-        new XmlNodeAndCustomerMatcher_Helper().assertDocumentContainsManyCustomers(source, how_many);
-    }
-
-    private void assertDocumentContainsCustomer(Source source, Customer customer) {
-        new XmlNodeAndCustomerMatcher_Helper().assertDocumentContainsCustomer(source, customer);
-    }
-//    private void assertDocumentContainsCustomer(Node root_element, Customer customer) {
-//        new XmlNodeAndCustomerMatcher_Helper().assertDocumentContainsCustomer(root_element, customer);
-//    }
-
-//    private void assertDocumentNotContainCustomer(Node root_node, Customer customer) {
-//        matcher_helper.assertDocumentNotContainCustomer(root_node, customer);
-//    }
-
-    private void assertDocumentNotContainCustomer(Source source, Customer customer) {
-        new XmlNodeAndCustomerMatcher_Helper().assertDocumentNotContainCustomer(source, customer);
+    private String createFakeStringWithCustomers() {
+        String s = "<Customers>" + "\n";
+        for (int i = 1; i <= nInitialCustomers; i++) {
+            s += (new FakeXmlString(makeFakeCustomer("fn" + i + " m. " + "ln" + i)).getXmlString());
+        }
+        s += "</Customers>";
+        return s;
     }
 
 
-    private Customer makeFakeCustomer(String firstName, String lastName, char middleInitial) {
-        return new Customer(firstName, lastName, middleInitial)
-                .addAddress("home", "street1", "street2", "12345", "fakeville")
+    private String readFileIntoString() throws FileNotFoundException {
+        return new Scanner(TEST_FILE, CHAR_SET).useDelimiter("\\A").next();
+    }
+
+
+    private Customer makeFakeCustomer(String name) {
+        return new Customer(name)
+                .addAddress("home", "street name 1", "street name 2", "12345", "fakeville")
                 .addPhone("work", "+358555555555")
                 .addEmail("work", "fake@fakedomain.com")
                 .setNotes(" this is a note ");
     }
 
     private Customer makeFakeCustomerConan() {
-        return new Customer("Conan", "Customer", 'C')
+        return new Customer("Conan C. Customer") /*Customer("Conan", "Customer", 'C')*/
                 .addAddress("VISITING_ADDRESS", "Customer Street 8 B 9", "(P.O. Box 190)", "12346", "Customerville")
                 .addPhone("WORK_PHONE", "+358 555 555 555")
                 .addEmail("WORK_EMAIL", "conan.c.customer@example.com")
@@ -260,127 +266,68 @@ public class DomXmlCustomerDaoTest {
     }
 
 
-    private String readFileIntoString() throws FileNotFoundException {
-        return new Scanner(new File(XML_TEST_FILE), "UTF-8").useDelimiter("\\A").next();
-    }
+    private static class MatcherHelper {
 
-    private static Node nodeVersionOf(String exampleXml) throws Exception {
-        Element element = DocumentBuilderFactory.newInstance()
-                .newDocumentBuilder()
-                .parse(new ByteArrayInputStream(exampleXml.getBytes()))
-                .getDocumentElement();
-        return element;
-    }
-
-    private StreamSource readFileIntoStreamSource(String filename) {
-        return new StreamSource(filename);
-    }
-//
-//    private Element getRootElement() throws IOException, SAXException, ParserConfigurationException {
-//        return new FileXmlDocumentRWUtils().readDocument(new FileInputStream(XML_TEST_FILE)).getDocumentElement();
-//    }
-
-
-
-    private static class FakeXmlString {
-
-        private String fakeString;
-        public FakeXmlString(Customer c) {
-            fakeString = buildCustomerXmlString(c);
+        public static void assertDocumentContainsCorrectNumberOfCustomers(Source source, int how_many) {
+            assertThat(source, hasXPath("/Customers[count(Customer) = " + how_many + "]"));
         }
 
-        @Override
-        public String toString() {
-            return fakeString;
+        public static void assertDocumentContainsCustomer(Source source, Customer customer) {
+            String sub_query_name_only = buildCustomerSpecificSubQuery(customer, true);
+            String sub_query = buildCustomerSpecificSubQuery(customer, false);
+            assertThat(source, hasXPath("/Customers[count(Customer[" + sub_query_name_only + "]) = 1]"));
+            assertThat(source, hasXPath("/Customers/Customer[" + sub_query + "]"));
         }
 
-        private String readFakeFile(){
-            return /*"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +*/
-                    "<Customers xmlns=\"http://www.arcusys.fi/customer-example\">\n" +
-                            "\t<Customer>\n" +
-                            "\t\t<Name>Conan C. Customer</Name>\n" +
-                            "\t\t<Address>\n" +
-                            "\t\t\t<Type>VISITING_ADDRESS</Type>\n" +
-                            "\t\t\t<Street>Customer Street 8 B 9</Street>\n" +
-                            "\t\t\t<Street>(P.O. Box 190)</Street>\n" +
-                            "\t\t\t<PostalCode>12346</PostalCode>\n" +
-                            "\t\t\t<Town>Customerville</Town>\n" +
-                            "\t\t</Address>\n" +
-                            "\t\t<Phone>\n" +
-                            "\t\t\t<Type>WORK_PHONE</Type>\n" +
-                            "\t\t\t<Value>+358 555 555 555</Value>\n" +
-                            "\t\t</Phone>\n" +
-                            "\t\t<Email>\n" +
-                            "\t\t\t<Type>WORK_EMAIL</Type>\n" +
-                            "\t\t\t<Value>conan.c.customer@example.com</Value>\n" +
-                            "\t\t</Email>\n" +
-                            "\t\t<Phone>\n" +
-                            "\t\t\t<Type>MOBILE_PHONE</Type>\n" +
-                            "\t\t\t<Value>+358 50 999 999 999</Value>\n" +
-                            "\t\t</Phone>\n" +
-                            "\t\t<Notes>                                            Conan inputStream a customer.\n" +
-                            "\t\t</Notes> \n" +
-                            "\t</Customer>\n" +
-                            "</Customers>\n";
+        public static void assertDocumentNotContainCustomerName(Source source, Customer customer) {
+            String sub_query_name_only = buildCustomerSpecificSubQuery(customer, true);
+            assertThat(source, not(hasXPath("/Customers/Customer[" + sub_query_name_only + "]")));
         }
 
-        private String buildCustomerXmlString(Customer c) {
-            return "<Customer>"
-                    + buildNameXmlString(c.getName())
-                    + buildContactDetailXmlString(c.getContactDetails())
-                    + buildNotesXmlString(c.getNotes())
-                    + "</Customer>";
+        public static void assertDocumentNotContainCustomer(Source source, Customer customer) {
+            String sub_query = buildCustomerSpecificSubQuery(customer, false);
+            assertThat(source, not(hasXPath("/Customers/Customer[" + sub_query + "]")));
         }
 
-        private String buildNameXmlString(Name name) {
-            return "<Name>" + name.toString() + "</Name>";
-        }
 
-        private String buildContactDetailXmlString(List<ContactDetail> contactDetails) {
-            String s = "";
-            for (ContactDetail detail : contactDetails) {
+        private static String buildCustomerSpecificSubQuery(Customer customer, boolean name_only) {
+
+
+            String sub_query = "Name = \"" + customer.getName() + "\"";
+            if (name_only)
+                return sub_query;
+
+            for (ContactDetail detail : customer.getContactDetails()) {
                 if (detail instanceof Address)
-                    s += buildAddressXmlString((Address) detail);
+                    sub_query += buildAddressSubQuery((Address) detail);
                 else if (detail instanceof Email)
-                    s += buildEmailDetailXmlString((Email) detail);
+                    sub_query += buildEmailSubQuery((Email) detail);
                 else if (detail instanceof Phone)
-                    s += buildPhoneDetailXmlString((Phone) detail);
-                else
-                    throw new RuntimeException("Unknown contact detail : " + detail.getContactType());
+                    sub_query += buildPhoneSubQuery((Phone) detail);
             }
-            return s;
+
+            if (customer.getNotes() != null && !customer.getNotes().equals(""))
+                sub_query += " and Notes = \"" + customer.getNotes() + "\"";
+
+            return sub_query;
         }
 
-        private String buildAddressXmlString(Address address) {
-            return "<Address>"
-                    + "<Type>" + address.getType() + "</Type>"
-                    + "<Street>" + address.getStreet1() + "</Street>"
-                    + "<Street>" + address.getStreet2() + "</Street>"
-                    + "<PostalCode>" + address.getPostalCode() + "</PostalCode>"
-                    + "<Town>" + address.getTown() + "</Town>"
-                    + "</Address>";
+        private static String buildAddressSubQuery(Address address) {
+            return " and Address[Type = \"" + address.getType()
+                    + "\" and Street = \"" + address.getStreet1()
+                    + "\" and Street = \"" + address.getStreet2()
+                    + "\" and PostalCode = \"" + address.getPostalCode()
+                    + "\" and Town = \"" + address.getTown() + "\"]";
         }
 
-        private String buildEmailDetailXmlString(Email email) {
-            return "<Email>"
-                    + "<Type>" + email.getType() + "</Type>"
-                    + "<Value>" + email.getValue() + "</Value>"
-                    + "</Email>";
+        private static String buildEmailSubQuery(Email email) {
+            return " and Email[Type = \"" + email.getType() + "\" and Value = \"" + email.getValue() + "\"]";
         }
 
-        private String buildPhoneDetailXmlString(Phone phone) {
-            return "<Phone>"
-                    + "<Type>" + phone.getType() + "</Type>"
-                    + "<Value>" + phone.getValue() + "</Value>"
-                    + "</Phone>";
-        }
-
-        private String buildNotesXmlString(String notes) {
-            return "<Notes>" + notes + "</Notes>";
+        private static String buildPhoneSubQuery(Phone phone) {
+            return " and Phone[Type = \"" + phone.getType() + "\" and Value = \"" + phone.getValue() + "\"]";
         }
 
     }
-
-
 
 }

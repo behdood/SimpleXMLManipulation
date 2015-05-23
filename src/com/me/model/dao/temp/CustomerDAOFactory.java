@@ -11,8 +11,7 @@ import java.io.*;
 
 public class CustomerDAOFactory {
 
-    public CustomerDao getCustomerDao(String type, String fileName)
-            throws IOException, SAXException, ParserConfigurationException {
+    public CustomerDao getCustomerDao(String type, String fileName) {
         if (type.equals("xml")) {
 //            InputStream inputStream = new FileInputStream(fileName);
 //            OutputStream outputStream = new FileOutputStream(fileName);

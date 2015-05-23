@@ -17,9 +17,14 @@ public class Customer {
         this.notes = notes;
     }
 
-    public Customer(String firstName, String lastName, char middleInitial) {
-        this.customerName = new Name(firstName, lastName, middleInitial);
-        contactDetails = new ArrayList<ContactDetail>();
+//    public Customer(String firstName, String lastName, char middleInitial) {
+//        this.customerName = new Name(firstName, lastName, middleInitial);
+//        contactDetails = new ArrayList<ContactDetail>();
+//    }
+
+    public Customer(String name) {
+        this.customerName = new Name(name);
+        contactDetails = new ArrayList<>();
     }
 
 
@@ -63,6 +68,10 @@ public class Customer {
         return addPhone(new Phone(phoneType, value));
     }
 
+    public Customer addDetail(ContactDetail detail) {
+        contactDetails.add(detail);
+        return this;
+    }
 
     public Customer setName(Name newCustomerName) {
         this.customerName = newCustomerName;
@@ -79,7 +88,7 @@ public class Customer {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Customer customer = (Customer) o;
-        return Objects.equals(customerName.toString(), customer.customerName.toString()) &&
+        return Objects.equals(customerName, customer.customerName) &&
                 Objects.equals(contactDetails, customer.contactDetails) &&
                 Objects.equals(notes, customer.notes);
     }

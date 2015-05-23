@@ -19,7 +19,7 @@ public /*abstract*/ class DaoFactory {
 
 //    public abstract CustomerDao getCustomerDao();
 
-    public static CustomerDao getCustomerDao(int type) throws FileNotFoundException {
+    public static CustomerDao getCustomerDao(int type) {
         switch (type) {
             case XML_DOM:
                 return new DomXmlCustomerDao(new FileXmlDocumentRWUtils("resources/Customer.xml")); // todo

@@ -41,9 +41,10 @@ public abstract class XmlDocumentRWUtils {
 //    }
 
 
-    public Document loadDocument() throws ParserConfigurationException, IOException, SAXException {
+    public Document loadDocument() throws IOException, SAXException, ParserConfigurationException {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setNamespaceAware(true);
+//        dbf.setNamespaceAware(false);
         DocumentBuilder documentBuilder = dbf.newDocumentBuilder();
 
         InputStream inputStream = prepareSource();
