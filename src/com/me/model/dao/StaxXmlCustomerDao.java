@@ -10,6 +10,12 @@ import java.util.Iterator;
 public class StaxXmlCustomerDao implements CustomerDao {
     @Override
     public void addCustomer(Customer c) {
+//        //SAX
+//        InputStream xmlInput = new FileInputStream(XML_TEST_FILE);
+//        SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
+//        SAXParser saxParser = saxParserFactory.newSAXParser();
+//        SaxHandler saxHandler = new SaxHandler();
+//        saxParser.parse(xmlInput, saxHandler);
         throw new RuntimeException("Not implemented yet!");
     }
 

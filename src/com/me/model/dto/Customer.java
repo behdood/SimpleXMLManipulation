@@ -17,11 +17,6 @@ public class Customer {
         this.notes = notes;
     }
 
-//    public Customer(String firstName, String lastName, char middleInitial) {
-//        this.customerName = new Name(firstName, lastName, middleInitial);
-//        contactDetails = new ArrayList<ContactDetail>();
-//    }
-
     public Customer(String name) {
         this.customerName = new Name(name);
         contactDetails = new ArrayList<>();

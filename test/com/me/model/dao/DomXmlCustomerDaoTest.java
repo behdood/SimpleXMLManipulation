@@ -1,8 +1,11 @@
 package com.me.model.dao;
 
 
+import com.me.model.FakeCustomerBuilder;
 import com.me.model.dao.Utils.FakeXmlString;
 import com.me.model.dao.Utils.FileXmlDocumentRWUtils;
+import com.me.model.dao.factories.DaoFactory;
+import com.me.model.dao.factories.DomXmlDaoFactory;
 import com.me.model.dto.*;
 
 import com.me.model.exceptions.invalid_customer.CustomerDoesNotExistException;
@@ -44,17 +47,8 @@ public class DomXmlCustomerDaoTest {
         // at the beginning there are customers in file with names: "fn{i} m. ln{i}"
         createTestFileWithCustomers();
 
-//        NamespaceContext usingNamespaces = new SimpleNamespaceContext().withBinding("my_ns", "http://www.arcusys.fi/customer-example");
-
-        FileXmlDocumentRWUtils rwUtils = new FileXmlDocumentRWUtils(XML_TEST_FILE);
-        customerDAO = new DomXmlCustomerDao(rwUtils);
-
-//        //SAX
-//        InputStream xmlInput = new FileInputStream(XML_TEST_FILE);
-//        SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
-//        SAXParser saxParser = saxParserFactory.newSAXParser();
-//        SaxHandler saxHandler = new SaxHandler();
-//        saxParser.parse(xmlInput, saxHandler);
+        DaoFactory daoFactory = new DomXmlDaoFactory(new FileXmlDocumentRWUtils(XML_TEST_FILE));
+        customerDAO = daoFactory.getCustomerDao();
     }
 
     @After
@@ -68,24 +62,13 @@ public class DomXmlCustomerDaoTest {
         Customer c0 = makeFakeCustomerConan();
         Customer c1 = makeFakeCustomer("fn");
         Customer c2 = makeFakeCustomer("f n m. l n");
-//        Customer c1 = makeFakeCustomer("fn", "", '\0');
-//        Customer c2 = makeFakeCustomer("f n", "l n", 'm');
-
 
         customerDAO.addCustomer(c0);
         customerDAO.addCustomer(c1);
         customerDAO.addCustomer(c2);
 
-
         String xml_string = readFileIntoString();
 
-//        String xml1 = "<mountains><mountain>K2</mountain></mountains>";
-//        String xml2 = "<mountains><mountain>\n\tK2\n\t </mountain></mountains>";
-//        assertThat(the(xml1), isEquivalentTo(the(xml2)));
-        Source xx = the(xml_string);
-
-//        assertThat(xml(xml_string), hasXPath("/Customers"));
-//        assertThat(xml(xml_string), hasXPath("/Customers/Customer"));
         MatcherHelper.assertDocumentContainsCorrectNumberOfCustomers(xml(xml_string), nInitialCustomers + 3);
         MatcherHelper.assertDocumentContainsCustomer(xml(xml_string), c0);
         MatcherHelper.assertDocumentContainsCustomer(xml(xml_string), c1);
@@ -96,7 +79,6 @@ public class DomXmlCustomerDaoTest {
     public void addCustomer_nullNameThrowsException() throws Exception {
         Customer c_null = makeFakeCustomer("");
 
-
         customerDAO.addCustomer(c_null);
     }
 
@@ -104,7 +86,6 @@ public class DomXmlCustomerDaoTest {
     public void addCustomer_duplicateThrowsException() throws Exception {
         Customer c = makeFakeCustomer("duplicate");
         Customer c_duplicate = makeFakeCustomer("duplicate");
-
 
         customerDAO.addCustomer(c);
         customerDAO.addCustomer(c_duplicate);
@@ -129,9 +110,7 @@ public class DomXmlCustomerDaoTest {
         Customer c_existing = makeFakeCustomer("fn2 m. ln2");
         Customer c_modified = makeFakeCustomer("fnew m. lnew");
 
-
         customerDAO.modifyCustomer(c_existing.getName(), c_modified);
-
 
         String xml_string = readFileIntoString();
         MatcherHelper.assertDocumentContainsCorrectNumberOfCustomers(xml(xml_string), nInitialCustomers);
@@ -216,7 +195,6 @@ public class DomXmlCustomerDaoTest {
         customerDAO.removeCustomer(c1);
         customerDAO.removeCustomer(c2);
         customerDAO.removeCustomer(c3);
-
         Iterator<Customer> res = customerDAO.findAllCustomers();
 
         assertNull(res);
@@ -247,24 +225,12 @@ public class DomXmlCustomerDaoTest {
         return new Scanner(TEST_FILE, CHAR_SET).useDelimiter("\\A").next();
     }
 
-
     private Customer makeFakeCustomer(String name) {
-        return new Customer(name)
-                .addAddress("home", "street name 1", "street name 2", "12345", "fakeville")
-                .addPhone("work", "+358555555555")
-                .addEmail("work", "fake@fakedomain.com")
-                .setNotes(" this is a note ");
+        return FakeCustomerBuilder.makeFakeCustomer(name);
     }
-
     private Customer makeFakeCustomerConan() {
-        return new Customer("Conan C. Customer") /*Customer("Conan", "Customer", 'C')*/
-                .addAddress("VISITING_ADDRESS", "Customer Street 8 B 9", "(P.O. Box 190)", "12346", "Customerville")
-                .addPhone("WORK_PHONE", "+358 555 555 555")
-                .addEmail("WORK_EMAIL", "conan.c.customer@example.com")
-                .addPhone("MOBILE_PHONE", "+358 50 999 999 999")
-                .setNotes("                                            Conan inputStream a customer.\n\t\t");
+        return FakeCustomerBuilder.makeFakeCustomerConan();
     }
-
 
     private static class MatcherHelper {
 
@@ -291,8 +257,6 @@ public class DomXmlCustomerDaoTest {
 
 
         private static String buildCustomerSpecificSubQuery(Customer customer, boolean name_only) {
-
-
             String sub_query = "Name = \"" + customer.getName() + "\"";
             if (name_only)
                 return sub_query;

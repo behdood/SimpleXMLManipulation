@@ -20,9 +20,7 @@ public class FakeXmlString {
     private final String INDENT_LEVEL3 = "      ";
     private final String LINE_SEPARATOR = "\n";
 
-    private final String NAMESPACE = "http://www.arcusys.fi/customer-example";
-
-
+//    private final String NAMESPACE = "http://www.arcusys.fi/customer-example";
 
     public FakeXmlString(Customer customer) {
         this.customer = customer;
@@ -35,7 +33,6 @@ public class FakeXmlString {
 
     public Node getNodeVersionOfXmlString()
             throws ParserConfigurationException, IOException, SAXException {
-
         return DocumentBuilderFactory.newInstance()
                 .newDocumentBuilder()
                 .parse(new ByteArrayInputStream(xmlString.getBytes()))
@@ -43,7 +40,7 @@ public class FakeXmlString {
     }
 
     public static String readFakeFile() {
-        return /*"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +*/
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<Customers xmlns=\"http://www.arcusys.fi/customer-example\">\n" +
                         "\t<Customer>\n" +
                         "\t\t<Name>Conan C. Customer</Name>\n" +

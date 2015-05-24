@@ -1,6 +1,8 @@
-package com.me.model.dao;
+package com.me.model.bl;
 
 
+import com.me.model.dao.CustomerDao;
+import com.me.model.FakeCustomerBuilder;
 import com.me.model.dto.Customer;
 import com.me.model.dto.Name;
 
@@ -10,16 +12,23 @@ import java.util.List;
 
 public class FakeCustomerDao implements CustomerDao {
 
-    public List<Customer> customers;
+    List<Customer> customers;
 
     public FakeCustomerDao() {
         customers = new ArrayList<>();
     }
 
-    public FakeCustomerDao(Customer c) {
-        customers = new ArrayList<>();
-        customers.add(c);
+    public void initialize(int how_many) {
+        for (int i = 1; i <= how_many; i++) {
+            customers.add(FakeCustomerBuilder.makeFakeCustomer("fn" + i + " m. " + "ln" + i));
+        }
     }
+
+    public void cleanup() {
+        customers.clear();
+    }
+
+
 
     @Override
     public void addCustomer(Customer c)  {
@@ -52,6 +61,5 @@ public class FakeCustomerDao implements CustomerDao {
     public Iterator<Customer> findAllCustomers() {
         return customers.iterator();
     }
-
 
 }

@@ -1,79 +1,85 @@
 package com.me.model.bl;
 
 import com.me.model.dao.CustomerDao;
+import com.me.model.dao.factories.DaoFactory;
 import com.me.model.dto.Customer;
 import com.me.model.dto.Name;
+import com.me.model.exceptions.invalid_customer.CustomerAlreadyExistException;
+import com.me.model.exceptions.invalid_customer.CustomerDoesNotExistException;
+import com.me.model.exceptions.invalid_customer.InvalidCustomerObjectException;
+import com.me.model.exceptions.invalid_customer.NullCustomerNameException;
+import com.me.model.exceptions.io.XmlDocumentIOException;
+import com.me.model.exceptions.io.XmlDocumentReadException;
+import com.me.model.exceptions.storage.CorruptStorageException;
 
 import java.util.Iterator;
 
 public class CustomerBL implements CustomerIX {
 
-    private CustomerDao customerDao;
+    private DaoFactory daoFactory;
 
-    public CustomerBL(CustomerDao customerDAO) {
-        this.customerDao = customerDAO;
+
+    public CustomerBL(DaoFactory daoFactory) {
+        this.daoFactory = daoFactory;
     }
 
     @Override
     public boolean insertCustomer(Customer customer) {
 //        CustomerDao customerDao = factory.getCustomerDao();
         try {
-            customerDao.addCustomer(customer);
-        } catch (Exception e) {
-            e.printStackTrace();
-            //todo
-            return false;
+            getCustomerDao().addCustomer(customer);
+            return true;
+        } catch (NullCustomerNameException | XmlDocumentIOException
+                | CustomerAlreadyExistException | InvalidCustomerObjectException e) {
+//            e1.printStackTrace();
         }
-        return true;
+        return false;
     }
 
     @Override
     public boolean updateCustomer(Name oldCustomerName, Customer updatedCustomer) {
-//        CustomerDao customerDao = factory.getCustomerDao();
         try {
-            customerDao.modifyCustomer(oldCustomerName, updatedCustomer);
-        } catch (Exception e) {
-            e.printStackTrace();
-            //todo
-            return false;
+            getCustomerDao().modifyCustomer(oldCustomerName, updatedCustomer);
+            return true;
+        } catch (NullCustomerNameException | CustomerDoesNotExistException | CorruptStorageException
+                | XmlDocumentIOException | InvalidCustomerObjectException e) {
+//            e.printStackTrace();
         }
-        return true;
+        return false;
     }
 
     @Override
     public boolean deleteCustomer(Customer customer) {
-//        CustomerDao customerDao = factory.getCustomerDao();
         try {
-            customerDao.removeCustomer(customer);
-        } catch (Exception e) {
-            e.printStackTrace();
-            //todo
-            return false;
+            getCustomerDao().removeCustomer(customer);
+            return true;
+        } catch (CustomerDoesNotExistException | XmlDocumentIOException | CorruptStorageException e) {
+//            e.printStackTrace();
         }
-        return true;
+        return false;
     }
 
     @Override
     public Customer searchCustomerByName(Name name) {
-//        CustomerDao customerDao = factory.getCustomerDao();
         try {
-            return customerDao.findCustomerByName(name);
-        } catch (Exception e) {
-            e.printStackTrace();
-            //todo
-            return null;
+            return getCustomerDao().findCustomerByName(name);
+        } catch (XmlDocumentReadException | CorruptStorageException e) {
+//            e.printStackTrace();
         }
+        return null;
     }
 
     @Override
     public Iterator<Customer> findAllCustomers() {
-//        CustomerDao customerDao = factory.getCustomerDao();
         try {
-            return customerDao.findAllCustomers();
-        } catch (Exception e) {
-            e.printStackTrace();
-            //todo
-            return null;
+            return getCustomerDao().findAllCustomers();
+        } catch (XmlDocumentReadException | CorruptStorageException e) {
+//            e.printStackTrace();
         }
+        return null;
+    }
+
+    private CustomerDao getCustomerDao() {
+        return daoFactory.getCustomerDao();
     }
 }

@@ -13,7 +13,7 @@ import java.io.*;
 public class FileXmlDocumentRWUtils extends XmlDocumentRWUtils {
 
 
-    // todo : usage:
+    // usage:
 //    InputStream is = new FileInputStream(file);
 //    InputStream is = new ByteArrayInputStream(s.getBytes());
 

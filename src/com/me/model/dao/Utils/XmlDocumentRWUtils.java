@@ -17,30 +17,6 @@ import java.io.InputStream;
 public abstract class XmlDocumentRWUtils {
 
 
-//    public Document readDocument(InputStream is) throws ParserConfigurationException, IOException, SAXException {
-//        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-//        dbf.setNamespaceAware(true);
-//        DocumentBuilder documentBuilder = dbf.newDocumentBuilder();
-//
-//        Document doc = documentBuilder.parse(is);
-//        System.out.println("NS = " + doc.getNamespaceURI());
-//        return doc;
-//    }
-
-//    public StreamResult writeDocument(Document document, String filename) throws TransformerException, FileNotFoundException {
-//
-//        Transformer transformer = prepareTransformer();
-//
-//        DOMSource domSource = new DOMSource(document);
-//
-//        StreamResult streamResult = prepareResult(filename);
-//
-//        transformer.transform(domSource, streamResult);
-//
-//        return streamResult;
-//    }
-
-
     public Document loadDocument() throws IOException, SAXException, ParserConfigurationException {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setNamespaceAware(true);
@@ -54,13 +30,8 @@ public abstract class XmlDocumentRWUtils {
 
     public Result saveDocument(Document document) throws TransformerException, FileNotFoundException {
         Transformer transformer = prepareTransformer();
-
-        Source source = new DOMSource(document);
-
         Result result = prepareResult();
-
-        transformer.transform(source, result);
-
+        transformer.transform(new DOMSource(document), result);
         return result;
     }
 

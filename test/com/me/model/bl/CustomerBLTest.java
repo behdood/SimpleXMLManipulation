@@ -1,7 +1,8 @@
 package com.me.model.bl;
 
 
-import com.me.model.dao.FakeCustomerDao;
+import com.me.model.FakeCustomerBuilder;
+import com.me.model.dao.factories.DaoFactory;
 import com.me.model.dto.*;
 import org.junit.After;
 import org.junit.Before;
@@ -18,77 +19,85 @@ public class CustomerBLTest {
     FakeCustomerDao fakeCustomerDao;
     CustomerIX customerBL;
 
+    private final int nInitialCustomer = 4;
+
     @Before
     public void setUp() {
 
-        fakeCustomerDao = new FakeCustomerDao();
-//        customerBL = new CustomerBL(fakeCustomerDao);
-        customerBL = new CustomerBL(fakeCustomerDao);
-//        fakeCustomerDao = (FakeCustomerDao) fakeFactory.getCustomerDao();
+        DaoFactory daoFactory = new FakeCustomerDaoFactory();
+        customerBL = new CustomerBL(daoFactory);
+
+        fakeCustomerDao = (FakeCustomerDao) daoFactory.getCustomerDao();
+        fakeCustomerDao.initialize(nInitialCustomer);
     }
 
     @After
     public void tearDown() {
-//        fakeCustomerDao.customers.clear();
+        fakeCustomerDao.cleanup();
     }
 
     @Test
-    public void testInsertNewCustomer() {
+    public void insertNewCustomer() {
+        Customer c0 = makeFakeCustomerConan();
         Customer c1 = makeFakeCustomer("fn");
         Customer c2 = makeFakeCustomer("f n m. l n");
 
+        boolean res0 = customerBL.insertCustomer(c0);
         boolean res1 = customerBL.insertCustomer(c1);
         boolean res2 = customerBL.insertCustomer(c2);
 
+        assertTrue(res0);
         assertTrue(res1);
         assertTrue(res2);
-        assertEquals(c1, fakeCustomerDao.customers.get(0));
-        assertEquals(c2, fakeCustomerDao.customers.get(1));
+        assertEquals(nInitialCustomer + 3, fakeCustomerDao.customers.size());
+        assertEquals(c0, fakeCustomerDao.customers.get(nInitialCustomer));
+        assertEquals(c1, fakeCustomerDao.customers.get(nInitialCustomer + 1));
+        assertEquals(c2, fakeCustomerDao.customers.get(nInitialCustomer + 2));
     }
 
     @Test
-    public void testUpdateCustomer_modifyDetails() {
-        Customer c = makeFakeCustomer("fn m. ln");
-//        Customer c_modified = c;
-        Customer c_modified = makeFakeCustomer("fn m. ln");
-        c_modified.addEmail("personal", "personal@fakedomain.com")
-                .setNotes("this is the new note");
-        fakeCustomerDao.customers.add(c);
+    public void updateCustomer_modifyDetails() {
+        Customer c_existing = makeFakeCustomer("fn2 m. ln2");
+        Customer c_modified = makeFakeCustomer("fn2 m. ln2")
+                .setNotes("new notes").addEmail("NEW_EMAIL", "new@new_domain.com");
+        int existing_idx = fakeCustomerDao.customers.indexOf(c_existing);
 
-        boolean res = customerBL.updateCustomer(c.getName(), c_modified);
+        boolean res = customerBL.updateCustomer(c_existing.getName(), c_modified);
 
         assertTrue(res);
-        assertEquals(c_modified, fakeCustomerDao.customers.get(0));
-        assertFalse(fakeCustomerDao.customers.contains(c));     // unmodified customer should not exist anymore
+        assertEquals(nInitialCustomer, fakeCustomerDao.customers.size());
+        assertEquals(c_modified, fakeCustomerDao.customers.get(existing_idx));
+        assertFalse(fakeCustomerDao.customers.contains(c_existing));
     }
 
     @Test
     public void testUpdateCustomer_modifyName() {
-        Customer c = makeFakeCustomer("fn m. ln");
+        Customer c_existing = makeFakeCustomer("fn2 m. ln2");
         Customer c_modified = makeFakeCustomer("fnew m. lnew");
-        fakeCustomerDao.customers.add(c);
+        int existing_idx = fakeCustomerDao.customers.indexOf(c_existing);
 
-        boolean res = customerBL.updateCustomer(c.getName(), c_modified);
+        boolean res = customerBL.updateCustomer(c_existing.getName(), c_modified);
 
         assertTrue(res);
-        assertEquals(c_modified, fakeCustomerDao.customers.get(0));
-        assertFalse(fakeCustomerDao.customers.contains(c));     // unmodified customer should not exist anymore
+        assertEquals(nInitialCustomer, fakeCustomerDao.customers.size());
+        assertEquals(c_modified, fakeCustomerDao.customers.get(existing_idx));
+        assertFalse(fakeCustomerDao.customers.contains(c_existing));
 }
 
     @Test
     public void testDeleteCustomer() {
-        Customer c = makeFakeCustomer("fn m. ln");
+        Customer c_existing = makeFakeCustomer("fn2 m. ln2");
 
-        boolean res = customerBL.deleteCustomer(c);
+        boolean res = customerBL.deleteCustomer(c_existing);
 
         assertTrue(res);
-        assertFalse(fakeCustomerDao.customers.contains(c));
+        assertEquals(nInitialCustomer - 1 , fakeCustomerDao.customers.size());
+        assertFalse(fakeCustomerDao.customers.contains(c_existing));
     }
 
     @Test
     public void testFindCustomerByName() {
-        Customer c = makeFakeCustomer("fn m. ln");
-        fakeCustomerDao.customers.add(c);
+        Customer c = makeFakeCustomer("fn2 m. ln2");
 
         Customer result = customerBL.searchCustomerByName(c.getName());
 
@@ -98,38 +107,28 @@ public class CustomerBLTest {
     @Test
     public void testFindAllCustomers() {
         List<Customer> customerList = new ArrayList<>();
-        customerList.add(makeFakeCustomer("fn1 m. ln1"));
-        customerList.add(makeFakeCustomer("fn2 m. ln2"));
-        customerList.add(makeFakeCustomer("fn3 m. ln3"));
-        fakeCustomerDao.customers.addAll(customerList);
+        for (int i = 1; i <= nInitialCustomer; i++) {
+            customerList.add(makeFakeCustomer("fn" + i + " m. ln" + i));
+        }
 
         Iterator<Customer> returnedCustomers = customerBL.findAllCustomers();
 
-        assertIteratorMatchesListInOrder(customerList, returnedCustomers);
+        assertIteratorMatchesListInOrder(returnedCustomers, customerList);
     }
 
 
-    private void assertIteratorMatchesListInOrder(List values, Iterator i) {
-        for (Object value : values) {
-            Object item = i.next();
-            assertEquals(value, item);
+    private void assertIteratorMatchesListInOrder(Iterator<Customer> iter, List<Customer> customers) {
+        for (Customer customer : customers) {
+            assertEquals(customer, iter.next());
         }
-        assertFalse(i.hasNext());
+        assertFalse(iter.hasNext());
     }
-
-//    private Customer makeFakeCustomer(String firstName, String lastName, char middleInitial) {
-//        return new Customer(firstName, lastName, middleInitial)
-//                .addAddress("home", "street1", "street2", "12345", "fakeville")
-//                .addPhone("work", "+358555555555")
-//                .addEmail("work", "fake@fakedomain.com")
-//                .setNotes(" this is a note ");
-//    }
 
     private Customer makeFakeCustomer(String name) {
-        return new Customer(name)
-                .addAddress("home", "street1", "street2", "12345", "fakeville")
-                .addPhone("work", "+358555555555")
-                .addEmail("work", "fake@fakedomain.com")
-                .setNotes(" this is a note ");
+        return FakeCustomerBuilder.makeFakeCustomer(name);
+    }
+
+    private Customer makeFakeCustomerConan() {
+        return FakeCustomerBuilder.makeFakeCustomerConan();
     }
 }
